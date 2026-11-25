@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="de" translate="no"><meta name="google" content="notranslate">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<script>try{var _t=localStorage.getItem("vp_theme")||"system";document.documentElement.setAttribute("data-theme",(_t==="light"||(_t==="system"&&matchMedia("(prefers-color-scheme: light)").matches))?"light":"dark")}catch(e){}</script>
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="VideoPlayer">
+<meta name="format-detection" content="telephone=no">
+<title>VideoPlayer</title>
+<style>
+:root{--bg:#000;--card:#131315;--card2:#1e1e22;--card3:#2a2a2f;--line:#2c2c31;--text:#f5f5f6;--mute:#9d9da5;--red:#ff2d4d;--red2:#c8102e;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 76px);-webkit-text-size-adjust:100%}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 system-ui,-apple-system,"SF Pro Text","Segoe UI",Roboto,sans-serif;min-height:100vh;min-height:100dvh}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:rgba(0,0,0,.9);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;display:flex;align-items:center;justify-content:space-between;padding:12px 24px;background:rgba(0,0,0,.88);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.2rem;letter-spacing:-.02em}
+.logo i{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--red),var(--red2));display:grid;place-items:center}
+.logo i::after{content:"";border-left:10px solid #fff;border-top:6px solid transparent;border-bottom:6px solid transparent;margin-left:2px}
+.count{color:var(--mute);font-size:.9rem}
+main{max-width:1280px;margin:0 auto;padding:20px 24px 48px}
+.loader{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:14px}
+.row{display:flex;gap:10px}
+.row>input{flex:1;min-width:0}
+.field{position:relative;flex:1;min-width:0}
+input[type=text]{width:100%;min-height:48px;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:14px;padding:12px 16px;font:inherit;font-size:16px;outline:none;-webkit-appearance:none;appearance:none}
+input[type=text]:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(255,45,77,.25)}
+.field input{padding-right:110px}
+button{font:inherit;font-weight:700;cursor:pointer;border:0;border-radius:14px;min-height:44px;padding:0 20px;color:#fff;background:var(--card3);touch-action:manipulation}
+button:active{opacity:.7}
+button.red{background:linear-gradient(135deg,var(--red),var(--red2))}
+.paste{position:absolute;right:6px;top:6px;min-height:36px;padding:0 14px;font-size:.9rem;background:var(--card2)}
+button:focus-visible,a.btn:focus-visible,summary:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+.more{margin-top:8px;color:var(--mute);font-size:.9rem}
+.more summary{cursor:pointer;font-weight:600;padding:8px 2px}
+.more .row{margin:6px 0}
+.more p{margin:8px 2px 2px;line-height:1.55}
+.err{color:#ff7b8c;font-size:.92rem;margin:6px 4px 0}
+.err:empty{display:none}
+.err.ok{color:#5fd38d}
+.layout{display:grid;gap:24px;margin-top:20px}
+.stage{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;position:relative;isolation:isolate;aspect-ratio:16/9;width:100%;background:#050505;border-radius:20px;overflow:hidden;border:1px solid var(--line)}
+.stage iframe,.stage video{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000}
+.stage:-webkit-full-screen{border-radius:0;aspect-ratio:auto;border:0}
+.stage:fullscreen{border-radius:0;aspect-ratio:auto;border:0}
+.ph{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:var(--mute);padding:20px}
+.ph b{display:block;width:76px;height:76px;margin:0 auto 14px;border-radius:50%;background:rgba(255,45,77,.14);position:relative}
+.ph b::after{content:"";position:absolute;left:30px;top:23px;border-left:24px solid var(--red);border-top:15px solid transparent;border-bottom:15px solid transparent}
+.spin{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;background:#000}
+.spin::after{content:"";width:42px;height:42px;border-radius:50%;border:4px solid #333;border-top-color:var(--red);animation:rot .8s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+.info{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-top:14px}
+.info h2{margin:0;font-size:1.25rem;line-height:1.3;word-break:break-word;flex:1 1 260px}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+a.btn{display:inline-flex;align-items:center;min-height:44px;padding:0 20px;font-weight:700;color:#fff;background:var(--card3);border-radius:14px;text-decoration:none}
+.share{display:none;margin-top:12px;gap:8px}
+.share.on{display:flex}
+.share input{flex:1;min-width:0}
+.lib h3{margin:0 0 12px;display:flex;justify-content:space-between;align-items:center;font-size:1.1rem}
+.lib h3 button{min-height:36px;padding:0 14px;font-size:.85rem}
+.list{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+.item{display:flex;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:16px}
+.item.on{border-color:var(--red);background:var(--card2)}
+.pick{flex:1;min-width:0;display:flex;align-items:center;gap:12px;padding:8px;background:none;text-align:left;font-weight:600}
+.th{flex:none;width:88px;height:50px;border-radius:10px;background:linear-gradient(135deg,#3a000d,#0b0b0b);display:grid;place-items:center}
+.th::after{content:"";border-left:14px solid rgba(255,255,255,.9);border-top:8px solid transparent;border-bottom:8px solid transparent}
+.meta{min-width:0}
+.ct{font-size:.95rem;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-word}
+.src{display:block;margin-top:2px;font-size:.8rem;font-weight:500;color:var(--mute)}
+.del{flex:none;width:44px;padding:0;margin-right:4px;background:none;color:var(--mute);font-size:1.1rem}
+.empty{text-align:center;color:var(--mute);padding:28px 16px;border:1px dashed var(--line);border-radius:16px}
+@media(min-width:1000px){.layout{grid-template-columns:minmax(0,1fr) 340px;align-items:start}.list{grid-template-columns:1fr}.lib{position:sticky;top:calc(env(safe-area-inset-top,0px) + 76px);max-height:calc(100dvh - 110px);overflow:auto}}
+@media(hover:hover){button:hover,a.btn:hover{filter:brightness(1.2)}}
+footer{max-width:1280px;margin:0 auto;padding:10px 24px 40px;color:var(--mute);font-size:.88rem}footer details{border-top:1px solid var(--line);padding:12px 4px}footer summary{cursor:pointer;font-weight:700;color:var(--text)}footer p,footer li{line-height:1.55}footer ul{padding-left:20px}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,30px);background:var(--red);color:#fff;padding:12px 22px;border-radius:999px;font-weight:700;opacity:0;pointer-events:none;transition:.3s;z-index:20}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+@media(max-width:600px){main{padding:14px 12px 40px}header{padding:10px 14px}.loader .row{flex-wrap:wrap}.field{flex:1 1 100%}#load{flex:1}.stage{border-radius:14px}.acts{width:100%}.acts>*{flex:1;justify-content:center}}
+.intro{position:fixed;inset:0;z-index:100;background:#000;display:grid;place-items:center;animation:introOut .35s .85s ease forwards;-webkit-tap-highlight-color:transparent}
+.intro-logo{display:flex;align-items:center;gap:14px;font-weight:800;font-size:2rem;letter-spacing:-.03em}
+.intro-logo i{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--red),var(--red2));display:grid;place-items:center;animation:pop .45s cubic-bezier(.2,.9,.3,1.3) both}
+.intro-logo i::after{content:"";border-left:20px solid #fff;border-top:12px solid transparent;border-bottom:12px solid transparent;margin-left:5px}
+.intro-logo span{animation:slide .45s .2s ease-out both}
+.intro::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--red);transform-origin:left;animation:bar .85s linear both}
+@keyframes pop{from{transform:scale(.2) rotate(-25deg);opacity:0}to{transform:none;opacity:1}}
+@keyframes slide{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:none}}
+@keyframes bar{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes introOut{to{opacity:0;visibility:hidden}}
+@media(prefers-reduced-motion:reduce){.intro{animation-delay:.3s}.intro-logo i,.intro-logo span{animation:none}.intro::after{display:none}}
+.srch{margin:6px 0 10px}
+.note{font-size:.8rem;margin:6px 2px 0}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chips:empty{display:none}
+.lbl{flex:1 0 100%;font-size:.82rem}
+.chip{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 14px 0 6px;font-size:.92rem}
+.chip img{width:32px;height:32px;border-radius:50%;object-fit:cover}
+.res{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin-top:10px}
+.res:empty{display:none}
+.res .empty{grid-column:1/-1}
+.rc{display:flex;flex-direction:column;background:var(--bg);border:1px solid var(--line);border-radius:14px;overflow:hidden;color:var(--text)}
+.rc img{width:100%;aspect-ratio:16/9;object-fit:cover;background:#111;cursor:pointer;display:block}
+.rt{padding:8px 10px 0;font-weight:600;font-size:.92rem;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-word}
+.rs{padding:2px 10px 0;font-size:.8rem;color:var(--mute)}
+.ra{display:flex;gap:8px;padding:8px 10px 10px;margin-top:auto}
+.ra button{flex:1;min-height:40px;padding:0 8px;font-size:.88rem}
+#mbtn{display:block;margin:10px auto 0}
+.key{margin-top:10px}
+body{background:radial-gradient(120% 60% at 50% -10%,#2a0710 0%,#000 60%) no-repeat,#000;background-attachment:scroll}
+.loader,.item,.rc{box-shadow:0 6px 24px rgba(0,0,0,.45)}
+.stage{box-shadow:0 10px 40px rgba(255,45,77,.12)}
+button.red{box-shadow:0 4px 14px rgba(255,45,77,.3)}
+.th{background:linear-gradient(135deg,#5a0f1f,#0b0b0b)}
+@supports not (aspect-ratio:16/9){.stage{height:0;padding-top:56.25%}}
+
+.tabs{display:flex;gap:6px;background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:4px;margin-bottom:12px}
+.tab{flex:1;min-height:40px;background:none;color:var(--mute);border-radius:10px}
+.tab.on{background:var(--card3);color:var(--text)}
+.panel[hidden]{display:none}
+.more{border-top:1px solid var(--line);margin-top:12px}
+.lib h3{padding-bottom:8px;border-bottom:1px solid var(--line)}
+.info{padding-bottom:12px;border-bottom:1px solid var(--line)}
+.srch{margin:0}
+.note{margin-top:12px}
+
+/* ===== Design v11 ===== */
+:root{--accent:linear-gradient(135deg,#ff2d4d,#ff6a3d);--glass:rgba(22,22,26,.72)}
+::selection{background:rgba(255,45,77,.45)}
+html{scrollbar-color:#3a3a42 transparent;scrollbar-width:thin}
+body{background:radial-gradient(90% 50% at 15% -10%,rgba(255,45,77,.20),transparent 60%),radial-gradient(70% 40% at 100% 0%,rgba(255,106,61,.12),transparent 55%),#050507}
+header{background:rgba(5,5,7,.78);border-bottom:1px solid rgba(255,255,255,.07)}
+.logo{font-size:1.25rem}
+.logo i{background:var(--accent);box-shadow:0 0 18px rgba(255,45,77,.55)}
+.count{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.08);padding:4px 12px;border-radius:999px;font-size:.8rem;font-weight:600}
+.loader{background:var(--glass);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.08);border-radius:24px;padding:16px}
+.tabs{background:rgba(0,0,0,.45);border-color:rgba(255,255,255,.08);border-radius:16px}
+.tab{transition:background .2s,color .2s;font-weight:700}
+.tab.on{background:var(--accent);color:#fff;box-shadow:0 4px 14px rgba(255,45,77,.35)}
+input[type=text]{background:rgba(0,0,0,.5);border-color:rgba(255,255,255,.1);border-radius:16px;transition:border-color .2s,box-shadow .2s}
+button{border-radius:16px;transition:transform .15s,filter .2s,background .2s,box-shadow .2s}
+button:active{transform:scale(.97)}
+button.red{background:var(--accent);box-shadow:0 6px 18px rgba(255,45,77,.35)}
+a.btn{border-radius:16px;background:rgba(255,255,255,.09);transition:filter .2s,transform .15s}
+a.btn:active{transform:scale(.97)}
+.paste{border-radius:12px;background:rgba(255,255,255,.1)}
+.more summary{color:var(--mute);transition:color .2s}.more summary:hover{color:var(--text)}
+.stage{border-radius:24px;border:1px solid rgba(255,255,255,.09);box-shadow:0 18px 60px rgba(0,0,0,.6),0 0 0 1px rgba(255,45,77,.08),0 12px 70px rgba(255,45,77,.14);background:radial-gradient(70% 70% at 50% 40%,#16060a,#050505)}
+.ph b{width:92px;height:92px;background:rgba(255,45,77,.12);border:1px solid rgba(255,45,77,.35);box-shadow:0 0 40px rgba(255,45,77,.3);animation:pulse 2.4s ease-in-out infinite}
+.ph b::after{left:37px;top:28px;border-left:28px solid #ff4d6a;border-top:18px solid transparent;border-bottom:18px solid transparent}
+@keyframes pulse{50%{box-shadow:0 0 60px rgba(255,45,77,.5);transform:scale(1.05)}}
+@media(prefers-reduced-motion:reduce){.ph b{animation:none}}
+.info h2{font-size:1.3rem;letter-spacing:-.01em}
+.lib{background:var(--glass);border:1px solid rgba(255,255,255,.08);border-radius:24px;padding:16px}
+.lib h3{font-size:1.05rem;border-bottom:1px solid rgba(255,255,255,.08)}
+.item{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:18px;transition:transform .15s,border-color .2s,background .2s;box-shadow:none}
+.item:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.18)}
+.item.on{border-color:#ff4d6a;background:rgba(255,45,77,.10);box-shadow:0 0 0 1px rgba(255,45,77,.4)}
+.th{width:92px;height:52px;border-radius:12px;background:linear-gradient(135deg,#7a1428,#1a0409)}
+.th.vimeo{background:linear-gradient(135deg,#0d5f8f,#06141d)}
+.th.dailymotion{background:linear-gradient(135deg,#1c4fb8,#060d1f)}
+.th.streamable{background:linear-gradient(135deg,#0b7a75,#04100f)}
+.th.mp4{background:linear-gradient(135deg,#4a4a55,#101014)}
+.src{display:inline-block;margin-top:4px;padding:1px 8px;border-radius:999px;background:rgba(255,255,255,.08);font-size:.72rem}
+.empty{border:1px dashed rgba(255,255,255,.14);border-radius:18px;background:rgba(255,255,255,.02)}
+.rc{background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.08);border-radius:18px;transition:transform .15s,border-color .2s}
+.rc:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.2)}
+.chip{background:rgba(255,255,255,.08);border-radius:999px}
+.toast{background:var(--accent);box-shadow:0 10px 30px rgba(255,45,77,.4)}
+footer{color:#7d7d86}
+@media(max-width:600px){.stage,.loader,.lib{border-radius:20px}.th{width:80px;height:46px}}
+
+/* ===== v12: Galerie-Karten, Vorschaubilder, Dialog ===== */
+.list{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.item{position:relative;display:block;overflow:hidden;padding:0}
+.item .pick{display:flex;flex-direction:column;align-items:stretch;gap:0;width:100%;padding:0;text-align:left;border-radius:0;background:none;box-shadow:none}
+.item .th{position:relative;width:100%;height:auto;aspect-ratio:16/9;border-radius:0;overflow:hidden;display:block}
+.item .th img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.item .th::before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(0,0,0,.35),rgba(0,0,0,0) 40%,rgba(0,0,0,.35))}
+.item .th::after{position:absolute;z-index:2;left:50%;top:50%;transform:translate(-45%,-50%);filter:drop-shadow(0 2px 6px rgba(0,0,0,.6))}
+.item .meta{padding:10px 12px 12px}
+.item .ct{font-size:.9rem}
+.badge{position:absolute;z-index:3;left:8px;top:8px;padding:3px 10px;border-radius:999px;font-size:.72rem;font-weight:800;background:#ff2d4d;color:#fff;pointer-events:none}
+.badge.vimeo{background:#1ab7ea}.badge.dailymotion{background:#2a6df4}.badge.streamable{background:#0f9d94}.badge.mp4{background:#5a5a66}
+.item .del{position:absolute;z-index:3;right:6px;top:6px;margin:0;width:38px;height:38px;min-height:0;border-radius:50%;background:rgba(0,0,0,.55);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);color:#fff}
+.modal{position:fixed;inset:0;z-index:200;display:grid;place-items:center;padding:20px;background:rgba(0,0,0,.65);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.modal[hidden]{display:none}
+.dlg{width:100%;max-width:380px;background:#17171b;border:1px solid rgba(255,255,255,.12);border-radius:24px;padding:22px;box-shadow:0 24px 80px rgba(0,0,0,.7);animation:pop2 .2s ease-out}
+@keyframes pop2{from{transform:scale(.94);opacity:0}to{transform:none;opacity:1}}
+.dlg h3{margin:0 0 8px;font-size:1.15rem}
+.dlg p{margin:0 0 20px;color:var(--mute);line-height:1.5}
+.mb{display:flex;gap:10px}
+.mb button{flex:1}
+
+/* ===== v13 ===== */
+.item .meta{padding-right:84px;min-height:64px}
+.tools{position:absolute;z-index:3;right:6px;bottom:6px;display:flex;gap:2px}
+.tools button{width:34px;height:34px;min-height:0;padding:0;border-radius:50%;background:none;color:var(--mute);font-size:1.05rem;box-shadow:none}
+.tools button.on{color:#ffc83d}
+.tools button:hover{color:#fff}
+.item.fav{border-color:rgba(255,200,61,.45)}
+#gq{margin:0 0 12px;min-height:42px;padding:8px 14px;border-radius:14px}
+#gq[hidden]{display:none}
+.dlg input{margin:-8px 0 18px}
+.dlg input[hidden]{display:none}
+.acts button[disabled]{opacity:.4;pointer-events:none}
+@media(max-width:600px){.acts>#prev,.acts>#next{flex:0 0 52px}}
+
+/* ===== Intro v14 ===== */
+.intro{background:radial-gradient(60% 45% at 50% 50%,rgba(255,45,77,.28),rgba(0,0,0,0) 70%),#000;animation:introOut2 .45s 1.25s ease forwards}
+.intro::after{height:3px;background:linear-gradient(90deg,#ff2d4d,#ff6a3d);box-shadow:0 0 14px rgba(255,45,77,.8);animation:bar2 1.25s cubic-bezier(.4,0,.2,1) both}
+.intro-box{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}
+.intro-logo{font-size:2.1rem}
+.intro-logo i{position:relative;background:linear-gradient(135deg,#ff2d4d,#ff6a3d);box-shadow:0 0 36px rgba(255,45,77,.7);animation:pop2i .6s cubic-bezier(.2,.9,.3,1.3) both}
+.intro-logo i::before{content:"";position:absolute;inset:0;border-radius:50%;border:2px solid rgba(255,45,77,.7);animation:ring 1.1s .3s ease-out both}
+.intro-logo span{animation:slide2 .55s .3s cubic-bezier(.2,.8,.2,1) both}
+.intro-tag{color:#9d9da5;font-size:.95rem;letter-spacing:.04em;animation:fadeUp .5s .7s ease-out both}
+@keyframes pop2i{from{transform:scale(.3) rotate(-30deg);opacity:0}to{transform:none;opacity:1}}
+@keyframes ring{from{transform:scale(1);opacity:.9}to{transform:scale(2.6);opacity:0}}
+@keyframes slide2{from{opacity:0;transform:translateX(-16px);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes bar2{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes introOut2{to{opacity:0;visibility:hidden;transform:scale(1.04)}}
+@media(max-width:600px){.intro-logo{font-size:1.7rem}.intro-logo i{width:54px;height:54px}}
+@media(prefers-reduced-motion:reduce){.intro,.intro-logo i,.intro-logo i::before,.intro-logo span,.intro-tag{animation-name:none!important}.intro{animation:introOut2 .3s .5s forwards!important}.intro::after{display:none}}
+
+/* ===== v15: Einstellungen, Hell-Modus ===== */
+.hr{display:flex;align-items:center;gap:10px}
+.gear{width:40px;height:40px;min-height:0;padding:0;border-radius:50%;font-size:1.2rem;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.08);box-shadow:none}
+.sl{margin:4px 0 8px;font-size:.8rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
+.seg{display:flex;gap:4px;padding:4px;margin-bottom:16px;border-radius:16px;background:var(--bg);border:1px solid var(--line)}
+.seg button{flex:1;min-height:40px;padding:0 8px;background:none;color:var(--mute);border-radius:12px;box-shadow:none}
+.seg button.on{background:var(--accent);color:#fff;box-shadow:0 4px 14px rgba(255,45,77,.3)}
+select{width:100%;min-height:48px;padding:10px 14px;border-radius:16px;background:var(--card2);color:var(--text);border:1px solid var(--line);font:inherit;font-size:16px}
+:root[data-theme=light]{--bg:#f3f3f7;--card:#fff;--card2:#f0f0f5;--card3:#e5e5ec;--line:#dadae3;--text:#15151a;--mute:#666672;--glass:rgba(255,255,255,.82);color-scheme:light}
+:root[data-theme=light] body{background:radial-gradient(90% 50% at 15% -10%,rgba(255,45,77,.12),transparent 60%),radial-gradient(70% 40% at 100% 0%,rgba(255,106,61,.10),transparent 55%),#f3f3f7}
+:root[data-theme=light] body::before{background:rgba(255,255,255,.9)}
+:root[data-theme=light] header{background:rgba(255,255,255,.84);border-bottom-color:rgba(0,0,0,.08)}
+:root[data-theme=light] .count,:root[data-theme=light] .gear{background:rgba(0,0,0,.06);border-color:rgba(0,0,0,.08)}
+:root[data-theme=light] .loader,:root[data-theme=light] .lib{border-color:rgba(0,0,0,.08);box-shadow:0 6px 24px rgba(0,0,0,.06)}
+:root[data-theme=light] .tabs{background:rgba(0,0,0,.05);border-color:rgba(0,0,0,.08)}
+:root[data-theme=light] input[type=text]{background:#fff;border-color:rgba(0,0,0,.14);color:var(--text)}
+:root[data-theme=light] button{color:var(--text)}
+:root[data-theme=light] button.red,:root[data-theme=light] .tab.on,:root[data-theme=light] .seg button.on,:root[data-theme=light] .item .del{color:#fff}
+:root[data-theme=light] .tab{color:var(--mute)}
+:root[data-theme=light] .tab.on{color:#fff}
+:root[data-theme=light] .paste{background:rgba(0,0,0,.07)}
+:root[data-theme=light] a.btn{color:var(--text);background:rgba(0,0,0,.07)}
+:root[data-theme=light] .tools button{color:var(--mute)}
+:root[data-theme=light] .tools button.on{color:#e0a000}
+:root[data-theme=light] .item,:root[data-theme=light] .rc{background:#fff;border-color:rgba(0,0,0,.09);box-shadow:0 4px 16px rgba(0,0,0,.06)}
+:root[data-theme=light] .item.on{background:rgba(255,45,77,.07);border-color:#ff4d6a}
+:root[data-theme=light] .item.fav{border-color:rgba(224,160,0,.6)}
+:root[data-theme=light] .chip{background:rgba(0,0,0,.06)}
+:root[data-theme=light] .empty{border-color:rgba(0,0,0,.18);background:rgba(0,0,0,.02)}
+:root[data-theme=light] .info,:root[data-theme=light] .lib h3{border-bottom-color:rgba(0,0,0,.09)}
+:root[data-theme=light] .stage .ph{color:#9d9da5}
+:root[data-theme=light] .dlg{background:#fff;border-color:rgba(0,0,0,.1)}
+:root[data-theme=light] .err{color:#d6203f}
+:root[data-theme=light] .err.ok{color:#178a4a}
+:root[data-theme=light] footer{color:#777783}
+:root[data-theme=light] .more{border-top-color:rgba(0,0,0,.09)}
+</style>
+</head>
+<body>
+<div class="intro" id="intro" aria-hidden="true"><div class="intro-box"><div class="intro-logo"><i></i><span>VideoPlayer</span></div><div class="intro-tag">Link einfügen. Abspielen.</div></div></div>
+<header><div class="logo"><i></i>VideoPlayer</div><div class="hr"><div class="count" id="count"></div><button class="gear" id="setb" data-i18n-title="sett">⚙</button></div></header>
+<main>
+  <div class="loader">
+    <div class="tabs" role="tablist">
+      <button class="tab on" id="tabL" role="tab" aria-selected="true" data-i18n="tabL">🔗 Link</button>
+      <button class="tab" id="tabS" role="tab" aria-selected="false" data-i18n="tabS">🔍 Suche</button>
+    </div>
+    <div class="panel" id="panL">
+      <div class="row">
+        <div class="field"><input type="text" id="url" data-i18n-ph="phUrl" placeholder="YouTube-, Google- oder MP4-Link einfügen" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" inputmode="url" enterkeyhint="go"><button class="paste" id="paste" data-i18n="paste">Einfügen</button></div>
+        <button class="red" id="load" data-i18n="load">▶ Laden</button>
+      </div>
+      <div class="row" style="margin-top:10px"><input type="text" id="ttl" data-i18n-ph="phTtl" placeholder="Titel (optional)" autocomplete="off"></div>
+      <div class="err" id="err"></div>
+      <div class="err ok" id="chk"></div>
+    </div>
+    <div class="panel" id="panS" hidden>
+      <div class="row"><input type="text" id="q" data-i18n-ph="phQ" placeholder="YouTuber oder Videoname suchen" autocomplete="off" autocapitalize="off" autocorrect="off" enterkeyhint="search"><button class="red" id="sbtn" data-i18n="search">Suchen</button></div>
+      <div class="err" id="serr"></div>
+      <a class="btn" id="yts" href="#" target="_blank" rel="noopener noreferrer" style="display:none;margin-top:8px" data-i18n="ytSearch">Auf YouTube suchen ↗</a>
+      <div class="chips" id="chips"></div>
+      <div class="res" id="res"></div>
+      <button id="mbtn" style="display:none" data-i18n="more">Mehr laden</button>
+      <p class="note" data-i18n="note">Beim Suchen wird dein Suchbegriff an freie Suchserver (Piped) gesendet und Vorschaubilder von YouTube geladen. Dabei wird z. B. deine IP-Adresse übertragen.</p>
+    </div>
+    <details class="more"><summary data-i18n="helpS">Hilfe: Welche Links gehen?</summary>
+      <p data-i18n="help">Funktioniert mit YouTube (Videos, Shorts, Live, Playlists, youtu.be, m.youtube.com), mit Google-Weiterleitungslinks („Linkadresse kopieren“ in der Google-Suche), Vimeo, Dailymotion, Streamable und direkten MP4-/WebM-Links (https). Auch die reine Video-ID geht. Sperrt der Besitzer die Einbettung, erscheint ein Button, der das Video direkt auf YouTube öffnet. Bitte nur Videos nutzen, für die du die Rechte hast.</p>
+    </details>
+  </div>
+  <div class="layout">
+    <section>
+      <div class="stage" id="stage"><div class="ph"><div><b></b><span data-i18n="stagePh">Link einfügen und „Laden“ tippen</span></div></div></div>
+      <div class="info">
+        <h2 id="name">Noch kein Video geladen</h2>
+        <div class="acts"><button id="prev" data-i18n-title="prev" title="Vorheriges Video" aria-label="Vorheriges Video">⏮</button><button id="next" data-i18n-title="next" title="Nächstes Video" aria-label="Nächstes Video">⏭</button><a class="btn" id="ext" href="#" target="_blank" rel="noopener noreferrer" style="display:none" data-i18n="orig">↗ Original öffnen</a><button id="fs" data-i18n="fs">⛶ Vollbild</button><button class="red" id="shareBtn" data-i18n="share">🔗 Teilen</button></div>
+      </div>
+      <div class="share" id="share"><input type="text" id="link" readonly><button id="copy" data-i18n="copy">Kopieren</button></div>
+    </section>
+    <aside class="lib"><h3><span data-i18n="gallery">Galerie</span> <button id="clear" data-i18n="clear">Leeren</button></h3><input type="text" id="gq" data-i18n-ph="phGq" placeholder="Galerie durchsuchen" autocomplete="off" hidden><div class="list" id="grid"></div></aside>
+  </div>
+</main>
+<footer>
+<details><summary data-i18n="usage">Nutzungshinweis</summary><p data-i18n="usageT">Bitte lade nur Videos, für die du die Rechte hast oder deren Einbindung ausdrücklich erlaubt ist. Diese Seite speichert keine Videos, sie bindet nur Inhalte von YouTube oder von dir angegebenen Servern ein. Das Herunterladen, Speichern und Mitschneiden (auch per Bildschirmaufnahme) der Videos ist nicht gestattet.</p></details>
+<details><summary data-i18n="priv">Datenschutz</summary>
+<p>Vorlage, keine Rechtsberatung. Bitte Platzhalter in [eckigen Klammern] ausfüllen und bei Bedarf prüfen lassen.</p>
+<ul>
+<li><b>Verantwortlich:</b> [Name, Anschrift, E-Mail].</li>
+<li><b>Hosting:</b> Beim Aufruf verarbeitet der Hosting-Anbieter [Anbieter eintragen] technisch bedingt deine IP-Adresse in Server-Logs.</li>
+<li><b>Galerie:</b> Deine gespeicherten Videos liegen nur lokal in deinem Browser und werden nicht an uns übertragen. Mit „Leeren“ oder durch Löschen der Browserdaten entfernst du sie. Für gespeicherte YouTube-Videos lädt dein Browser beim Öffnen der Seite die Vorschaubilder von i.ytimg.com (Google). Dabei werden z. B. deine IP-Adresse und Geräteinformationen an Google übertragen (Art. 6 Abs. 1 lit. a DSGVO bzw. berechtigtes Interesse; bitte prüfen).</li>
+<li><b>YouTube:</b> Der YouTube-Player (youtube-nocookie.com, Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Irland) wird erst nach deinem Klick auf „YouTube-Video laden“ geladen. Dabei werden z. B. deine IP-Adresse und Geräteinformationen übertragen. Rechtsgrundlage ist deine Einwilligung (Art. 6 Abs. 1 lit. a DSGVO). Du kannst sie jederzeit widerrufen, indem du die Seite verlässt. Mehr: policies.google.com/privacy.</li>
+<li><b>Weitere Player:</b> Vimeo, Dailymotion und Streamable werden nur nach deinem Klick geladen. Dabei werden z. B. deine IP-Adresse und Geräteinformationen an den jeweiligen Anbieter übertragen (Art. 6 Abs. 1 lit. a DSGVO). Bitte prüfe deren Datenschutzerklärungen.</li>
+<li><b>Videotitel:</b> Für YouTube-Videos in deiner Galerie fragt dein Browser den Titel bei youtube.com (oEmbed) ab. Dabei werden z. B. deine IP-Adresse und die Video-ID an Google übertragen.</li>
+<li><b>Suche:</b> Erst wenn du auf „Suchen“ tippst, wird dein Suchbegriff an öffentliche Piped-Server (Drittanbieter, z. B. pipedapi.kavin.rocks) gesendet, die YouTube abfragen. Vorschaubilder lädt dein Browser von i.ytimg.com (Google) bzw. vom Suchserver. Dabei werden z. B. deine IP-Adresse und Geräteinformationen übertragen (Art. 6 Abs. 1 lit. a DSGVO). Die Server werden nicht von uns betrieben; bitte prüfe deren Datenschutzhinweise.</li>
+<li><b>MP4-Links:</b> Wenn du einen direkten Videolink abspielst, verbindet sich dein Browser mit dem Server, der die Datei bereitstellt. Dieser Server erhält deine IP-Adresse.</li>
+<li><b>Deine Rechte:</b> Auskunft, Berichtigung, Löschung, Einschränkung, Widerspruch, Datenübertragbarkeit sowie Beschwerde bei einer Datenschutz-Aufsichtsbehörde.</li>
+</ul></details>
+<details><summary data-i18n="imp">Impressum</summary><p>[Vor- und Nachname]<br>[Straße und Hausnummer]<br>[PLZ Ort]<br>E-Mail: [E-Mail-Adresse]</p></details>
+</footer>
+<div class="toast" id="toast"></div>
+<div class="modal" id="sm" hidden><div class="dlg" role="dialog" aria-modal="true" aria-labelledby="smt"><h3 id="smt" data-i18n="sett">Einstellungen</h3>
+<div class="sl" data-i18n="theme">Design</div>
+<div class="seg" id="themeSeg"><button data-th="system" data-i18n="tSys">System</button><button data-th="dark" data-i18n="tDark">Dunkel</button><button data-th="light" data-i18n="tLight">Hell</button></div>
+<div class="sl" data-i18n="lang">Sprache</div>
+<select id="langSel" aria-label="Language"></select>
+<div class="mb" style="margin-top:20px"><button class="red" id="smx" data-i18n="done">Fertig</button></div></div></div>
+<div class="modal" id="modal" hidden><div class="dlg" role="dialog" aria-modal="true" aria-labelledby="mt"><h3 id="mt"></h3><p id="mp"></p><input type="text" id="mi" autocomplete="off" hidden><div class="mb"><button id="mno" data-i18n="cancel">Abbrechen</button><button class="red" id="myes">OK</button></div></div></div>
+
+<script>
+const $=s=>document.querySelector(s);
+const T={"de":{"tabL":"🔗 Link","tabS":"🔍 Suche","phUrl":"YouTube-, Google- oder MP4-Link einfügen","paste":"Einfügen","load":"▶ Laden","phTtl":"Titel (optional)","phQ":"YouTuber oder Videoname suchen","search":"Suchen","ytSearch":"Auf YouTube suchen ↗","more":"Mehr laden","note":"Beim Suchen wird dein Suchbegriff an freie Suchserver (Piped) gesendet und Vorschaubilder von YouTube geladen. Dabei wird z. B. deine IP-Adresse übertragen.","helpS":"Hilfe: Welche Links gehen?","help":"Funktioniert mit YouTube (Videos, Shorts, Live, Playlists, youtu.be, m.youtube.com), mit Google-Weiterleitungslinks („Linkadresse kopieren“ in der Google-Suche), Vimeo, Dailymotion, Streamable und direkten MP4-/WebM-Links (https). Auch die reine Video-ID geht. Sperrt der Besitzer die Einbettung, erscheint ein Button, der das Video direkt auf YouTube öffnet. Bitte nur Videos nutzen, für die du die Rechte hast.","stagePh":"Link einfügen und „Laden“ tippen","noVideo":"Noch kein Video geladen","orig":"↗ Original öffnen","fs":"⛶ Vollbild","share":"🔗 Teilen","copy":"Kopieren","gallery":"Galerie","clear":"Leeren","phGq":"Galerie durchsuchen","prev":"Vorheriges Video","next":"Nächstes Video","usage":"Nutzungshinweis","usageT":"Bitte lade nur Videos, für die du die Rechte hast oder deren Einbindung ausdrücklich erlaubt ist. Diese Seite speichert keine Videos, sie bindet nur Inhalte von YouTube oder von dir angegebenen Servern ein. Das Herunterladen, Speichern und Mitschneiden (auch per Bildschirmaufnahme) der Videos ist nicht gestattet.","priv":"Datenschutz","imp":"Impressum","cancel":"Abbrechen","ok":"OK","sett":"Einstellungen","theme":"Design","tSys":"System","tDark":"Dunkel","tLight":"Hell","lang":"Sprache","done":"Fertig","copied":"Link kopiert ✓","copyManual":"Bitte Link manuell kopieren","loadFirst":"Lade zuerst ein Video","pasteDenied":"Einfügen nicht erlaubt – bitte manuell einfügen","pasteManual":"Bitte manuell einfügen","noFs":"Vollbild wird hier nicht unterstützt","favOn":"Als Favorit oben angepinnt","favOff":"Favorit entfernt","errShort":"Kurzlinks wie {h} lassen sich hier nicht auflösen. Öffne den Link kurz im Browser und kopiere dann die YouTube-Adresse.","errGoogle":"Das ist ein Google-Link ohne YouTube-Adresse. Öffne das Video auf YouTube, tippe auf „Teilen“ und kopiere den Link von dort.","errUnsup":"Von {h} können Videos nicht eingebettet werden. Nutze einen YouTube-, Vimeo-, Dailymotion- oder Streamable-Link oder einen direkten MP4-Link.","errBad":"Bitte einen gültigen Video-Link einfügen.","detVideo":"✓ {p}-Video erkannt","detList":"✓ {p}-Playlist erkannt","blk100":"Dieses Video ist nicht verfügbar (gelöscht oder privat).","blkEmb":"Der Besitzer erlaubt hier keine Einbettung (Fehler {c}). Du kannst das Video trotzdem direkt auf YouTube ansehen.","blk153":" Tipp: Öffne die Seite über https oder als App, nicht als lokale Datei.","ytOpen":"▶ Auf YouTube ansehen","consentTxt":"Für die Wiedergabe wird der Player von {p} geladen. Dabei werden Daten wie deine IP-Adresse an {p} übertragen. Details stehen in der Datenschutzerklärung unten.","consentBtn":"▶ Video laden ({p})","mp4err":"Das Video konnte nicht geladen werden. Prüfe, ob der Link direkt auf eine MP4-Datei zeigt, per https erreichbar ist und Einbindung erlaubt.","count1":"{n} Video","countN":"{n} Videos","emptyG":"Deine Galerie ist noch leer. Geladene Videos werden hier automatisch gespeichert.","nothing":"Nichts gefunden.","noRes":"Keine Videos gefunden.","sErr":"Die freien Suchserver antworten gerade nicht. Versuche es gleich noch einmal oder suche direkt auf YouTube und füge den kopierten Link oben ein.","chLbl":"Kanäle – tippen, um alle Videos zu sehen","play":"▶ Abspielen","copyLink":"Link kopieren","favT":"Favorit","renameT":"Umbenennen","delT":"Entfernen","clrT":"Galerie leeren?","clrP":"Alle {n} gespeicherten Videos werden aus der Galerie entfernt.","renT":"Video umbenennen","renOk":"Speichern","vidT":"{p}-Video","listT":"{p}-Playlist"},"en":{"tabL":"🔗 Link","tabS":"🔍 Search","phUrl":"Paste a YouTube, Google or MP4 link","paste":"Paste","load":"▶ Load","phTtl":"Title (optional)","phQ":"Search a YouTuber or video name","search":"Search","ytSearch":"Search on YouTube ↗","more":"Load more","note":"When you search, your search term is sent to public search servers (Piped) and thumbnails are loaded from YouTube. This transmits e.g. your IP address.","helpS":"Help: Which links work?","help":"Works with YouTube (videos, Shorts, live, playlists, youtu.be, m.youtube.com), Google redirect links (“Copy link address” in Google search), Vimeo, Dailymotion, Streamable and direct MP4/WebM links (https). The plain video ID works too. If the owner blocks embedding, a button opens the video directly on YouTube. Please only use videos you have the rights to.","stagePh":"Paste a link and tap “Load”","noVideo":"No video loaded yet","orig":"↗ Open original","fs":"⛶ Fullscreen","share":"🔗 Share","copy":"Copy","gallery":"Gallery","clear":"Clear","phGq":"Search gallery","prev":"Previous video","next":"Next video","usage":"Usage notice","usageT":"Please only load videos you have the rights to or whose embedding is expressly permitted. This page does not store videos; it only embeds content from YouTube or from servers you specify. Downloading, saving and recording the videos (including by screen recording) is not permitted.","priv":"Privacy policy (German)","imp":"Legal notice (German)","cancel":"Cancel","ok":"OK","sett":"Settings","theme":"Appearance","tSys":"System","tDark":"Dark","tLight":"Light","lang":"Language","done":"Done","copied":"Link copied ✓","copyManual":"Please copy the link manually","loadFirst":"Load a video first","pasteDenied":"Pasting not allowed – please paste manually","pasteManual":"Please paste manually","noFs":"Fullscreen is not supported here","favOn":"Pinned to the top as favorite","favOff":"Favorite removed","errShort":"Short links like {h} cannot be resolved here. Open the link in your browser briefly, then copy the YouTube address.","errGoogle":"This is a Google link without a YouTube address. Open the video on YouTube, tap “Share” and copy the link from there.","errUnsup":"Videos from {h} cannot be embedded. Use a YouTube, Vimeo, Dailymotion or Streamable link or a direct MP4 link.","errBad":"Please paste a valid video link.","detVideo":"✓ {p} video detected","detList":"✓ {p} playlist detected","blk100":"This video is not available (deleted or private).","blkEmb":"The owner does not allow embedding here (error {c}). You can still watch the video directly on YouTube.","blk153":" Tip: open the page via https or as an app, not as a local file.","ytOpen":"▶ Watch on YouTube","consentTxt":"To play, the {p} player is loaded. Data such as your IP address is transmitted to {p}. Details are in the privacy policy below.","consentBtn":"▶ Load video ({p})","mp4err":"The video could not be loaded. Check that the link points directly to an MP4 file, is reachable via https and allows embedding.","count1":"{n} video","countN":"{n} videos","emptyG":"Your gallery is still empty. Loaded videos are saved here automatically.","nothing":"Nothing found.","noRes":"No videos found.","sErr":"The public search servers are not responding right now. Try again in a moment, or search directly on YouTube and paste the copied link above.","chLbl":"Channels – tap to see all videos","play":"▶ Play","copyLink":"Copy link","favT":"Favorite","renameT":"Rename","delT":"Remove","clrT":"Clear gallery?","clrP":"All {n} saved videos will be removed from the gallery.","renT":"Rename video","renOk":"Save","vidT":"{p} video","listT":"{p} playlist"},"es":{"tabL":"🔗 Enlace","tabS":"🔍 Buscar","phUrl":"Pega un enlace de YouTube, Google o MP4","paste":"Pegar","load":"▶ Cargar","phTtl":"Título (opcional)","phQ":"Busca un YouTuber o el nombre de un vídeo","search":"Buscar","ytSearch":"Buscar en YouTube ↗","more":"Cargar más","note":"Al buscar, tu término se envía a servidores de búsqueda públicos (Piped) y se cargan miniaturas de YouTube. Así se transmite, por ejemplo, tu dirección IP.","helpS":"Ayuda: ¿Qué enlaces sirven?","help":"Funciona con YouTube (vídeos, Shorts, directos, listas, youtu.be, m.youtube.com), enlaces de redirección de Google («Copiar dirección del enlace» en la búsqueda de Google), Vimeo, Dailymotion, Streamable y enlaces directos MP4/WebM (https). También sirve el ID del vídeo. Si el propietario bloquea la inserción, aparece un botón que abre el vídeo directamente en YouTube. Usa solo vídeos sobre los que tengas derechos.","stagePh":"Pega un enlace y toca «Cargar»","noVideo":"Aún no hay ningún vídeo","orig":"↗ Abrir original","fs":"⛶ Pantalla completa","share":"🔗 Compartir","copy":"Copiar","gallery":"Galería","clear":"Vaciar","phGq":"Buscar en la galería","prev":"Vídeo anterior","next":"Siguiente vídeo","usage":"Aviso de uso","usageT":"Carga solo vídeos sobre los que tengas derechos o cuya inserción esté expresamente permitida. Esta página no almacena vídeos; solo inserta contenido de YouTube o de servidores que tú indiques. No se permite descargar, guardar ni grabar los vídeos (tampoco con grabación de pantalla).","priv":"Política de privacidad (en alemán)","imp":"Aviso legal (en alemán)","cancel":"Cancelar","ok":"OK","sett":"Ajustes","theme":"Apariencia","tSys":"Sistema","tDark":"Oscuro","tLight":"Claro","lang":"Idioma","done":"Listo","copied":"Enlace copiado ✓","copyManual":"Copia el enlace manualmente","loadFirst":"Carga primero un vídeo","pasteDenied":"Pegar no está permitido: pega manualmente","pasteManual":"Pega manualmente","noFs":"Aquí no se admite pantalla completa","favOn":"Fijado arriba como favorito","favOff":"Favorito quitado","errShort":"Los enlaces cortos como {h} no se pueden resolver aquí. Ábrelo un momento en el navegador y copia después la dirección de YouTube.","errGoogle":"Es un enlace de Google sin dirección de YouTube. Abre el vídeo en YouTube, toca «Compartir» y copia el enlace desde allí.","errUnsup":"Los vídeos de {h} no se pueden insertar. Usa un enlace de YouTube, Vimeo, Dailymotion o Streamable, o un enlace MP4 directo.","errBad":"Pega un enlace de vídeo válido.","detVideo":"✓ Vídeo de {p} detectado","detList":"✓ Lista de {p} detectada","blk100":"Este vídeo no está disponible (eliminado o privado).","blkEmb":"El propietario no permite la inserción aquí (error {c}). Aun así puedes ver el vídeo directamente en YouTube.","blk153":" Consejo: abre la página por https o como app, no como archivo local.","ytOpen":"▶ Ver en YouTube","consentTxt":"Para reproducir se carga el reproductor de {p}. Se transmiten datos como tu dirección IP a {p}. Los detalles están en la política de privacidad de abajo.","consentBtn":"▶ Cargar vídeo ({p})","mp4err":"No se pudo cargar el vídeo. Comprueba que el enlace apunte directamente a un archivo MP4, sea accesible por https y permita la inserción.","count1":"{n} vídeo","countN":"{n} vídeos","emptyG":"Tu galería aún está vacía. Los vídeos cargados se guardan aquí automáticamente.","nothing":"No se encontró nada.","noRes":"No se encontraron vídeos.","sErr":"Los servidores de búsqueda públicos no responden ahora. Inténtalo de nuevo en un momento o busca directamente en YouTube y pega arriba el enlace copiado.","chLbl":"Canales: toca para ver todos los vídeos","play":"▶ Reproducir","copyLink":"Copiar enlace","favT":"Favorito","renameT":"Renombrar","delT":"Quitar","clrT":"¿Vaciar la galería?","clrP":"Se quitarán de la galería los {n} vídeos guardados.","renT":"Renombrar vídeo","renOk":"Guardar","vidT":"Vídeo de {p}","listT":"Lista de {p}"},"fr":{"tabL":"🔗 Lien","tabS":"🔍 Recherche","phUrl":"Colle un lien YouTube, Google ou MP4","paste":"Coller","load":"▶ Charger","phTtl":"Titre (facultatif)","phQ":"Cherche un YouTubeur ou un titre de vidéo","search":"Chercher","ytSearch":"Chercher sur YouTube ↗","more":"Charger plus","note":"Lors d’une recherche, ton terme est envoyé à des serveurs de recherche publics (Piped) et les miniatures sont chargées depuis YouTube. Cela transmet par ex. ton adresse IP.","helpS":"Aide : quels liens fonctionnent ?","help":"Fonctionne avec YouTube (vidéos, Shorts, direct, playlists, youtu.be, m.youtube.com), les liens de redirection Google (« Copier l’adresse du lien » dans la recherche Google), Vimeo, Dailymotion, Streamable et les liens MP4/WebM directs (https). L’identifiant seul de la vidéo fonctionne aussi. Si le propriétaire bloque l’intégration, un bouton ouvre la vidéo directement sur YouTube. N’utilise que des vidéos dont tu détiens les droits.","stagePh":"Colle un lien et touche « Charger »","noVideo":"Aucune vidéo chargée","orig":"↗ Ouvrir l’original","fs":"⛶ Plein écran","share":"🔗 Partager","copy":"Copier","gallery":"Galerie","clear":"Vider","phGq":"Rechercher dans la galerie","prev":"Vidéo précédente","next":"Vidéo suivante","usage":"Conditions d’utilisation","usageT":"Ne charge que des vidéos dont tu détiens les droits ou dont l’intégration est expressément autorisée. Cette page ne stocke aucune vidéo ; elle intègre seulement du contenu de YouTube ou de serveurs que tu indiques. Le téléchargement, l’enregistrement et la capture des vidéos (y compris par enregistrement d’écran) ne sont pas autorisés.","priv":"Politique de confidentialité (en allemand)","imp":"Mentions légales (en allemand)","cancel":"Annuler","ok":"OK","sett":"Réglages","theme":"Apparence","tSys":"Système","tDark":"Sombre","tLight":"Clair","lang":"Langue","done":"Terminé","copied":"Lien copié ✓","copyManual":"Copie le lien manuellement","loadFirst":"Charge d’abord une vidéo","pasteDenied":"Collage non autorisé : colle manuellement","pasteManual":"Colle manuellement","noFs":"Le plein écran n’est pas pris en charge ici","favOn":"Épinglé en haut comme favori","favOff":"Favori retiré","errShort":"Les liens courts comme {h} ne peuvent pas être résolus ici. Ouvre le lien brièvement dans le navigateur, puis copie l’adresse YouTube.","errGoogle":"C’est un lien Google sans adresse YouTube. Ouvre la vidéo sur YouTube, touche « Partager » et copie le lien à partir de là.","errUnsup":"Les vidéos de {h} ne peuvent pas être intégrées. Utilise un lien YouTube, Vimeo, Dailymotion, Streamable ou un lien MP4 direct.","errBad":"Colle un lien vidéo valide.","detVideo":"✓ Vidéo {p} détectée","detList":"✓ Playlist {p} détectée","blk100":"Cette vidéo n’est pas disponible (supprimée ou privée).","blkEmb":"Le propriétaire n’autorise pas l’intégration ici (erreur {c}). Tu peux quand même regarder la vidéo directement sur YouTube.","blk153":" Astuce : ouvre la page via https ou comme application, pas comme fichier local.","ytOpen":"▶ Regarder sur YouTube","consentTxt":"Pour la lecture, le lecteur de {p} est chargé. Des données comme ton adresse IP sont transmises à {p}. Les détails figurent dans la politique de confidentialité ci-dessous.","consentBtn":"▶ Charger la vidéo ({p})","mp4err":"La vidéo n’a pas pu être chargée. Vérifie que le lien pointe directement vers un fichier MP4, est accessible en https et autorise l’intégration.","count1":"{n} vidéo","countN":"{n} vidéos","emptyG":"Ta galerie est encore vide. Les vidéos chargées sont enregistrées ici automatiquement.","nothing":"Rien trouvé.","noRes":"Aucune vidéo trouvée.","sErr":"Les serveurs de recherche publics ne répondent pas pour le moment. Réessaie dans un instant ou cherche directement sur YouTube et colle le lien copié ci-dessus.","chLbl":"Chaînes – touche pour voir toutes les vidéos","play":"▶ Lire","copyLink":"Copier le lien","favT":"Favori","renameT":"Renommer","delT":"Retirer","clrT":"Vider la galerie ?","clrP":"Les {n} vidéos enregistrées seront retirées de la galerie.","renT":"Renommer la vidéo","renOk":"Enregistrer","vidT":"Vidéo {p}","listT":"Playlist {p}"},"tr":{"tabL":"🔗 Bağlantı","tabS":"🔍 Ara","phUrl":"YouTube, Google veya MP4 bağlantısı yapıştır","paste":"Yapıştır","load":"▶ Yükle","phTtl":"Başlık (isteğe bağlı)","phQ":"YouTuber veya video adı ara","search":"Ara","ytSearch":"YouTube'da ara ↗","more":"Daha fazla yükle","note":"Arama yaptığında arama terimin herkese açık arama sunucularına (Piped) gönderilir ve küçük resimler YouTube'dan yüklenir. Bu sırada örneğin IP adresin iletilir.","helpS":"Yardım: Hangi bağlantılar çalışır?","help":"YouTube (videolar, Shorts, canlı yayınlar, oynatma listeleri, youtu.be, m.youtube.com), Google yönlendirme bağlantıları (Google aramasında “Bağlantı adresini kopyala”), Vimeo, Dailymotion, Streamable ve doğrudan MP4/WebM bağlantıları (https) ile çalışır. Yalnızca video kimliği de olur. Sahibi yerleştirmeyi engellerse videoyu doğrudan YouTube'da açan bir düğme görünür. Lütfen yalnızca haklarına sahip olduğun videoları kullan.","stagePh":"Bir bağlantı yapıştır ve “Yükle”ye dokun","noVideo":"Henüz video yüklenmedi","orig":"↗ Orijinali aç","fs":"⛶ Tam ekran","share":"🔗 Paylaş","copy":"Kopyala","gallery":"Galeri","clear":"Temizle","phGq":"Galeride ara","prev":"Önceki video","next":"Sonraki video","usage":"Kullanım notu","usageT":"Lütfen yalnızca haklarına sahip olduğun veya yerleştirilmesine açıkça izin verilen videoları yükle. Bu sayfa video depolamaz; yalnızca YouTube'dan veya senin belirttiğin sunuculardan içerik yerleştirir. Videoların indirilmesi, kaydedilmesi ve ekran kaydı dahil kayda alınması yasaktır.","priv":"Gizlilik politikası (Almanca)","imp":"Yasal bilgiler (Almanca)","cancel":"İptal","ok":"OK","sett":"Ayarlar","theme":"Görünüm","tSys":"Sistem","tDark":"Koyu","tLight":"Açık","lang":"Dil","done":"Tamam","copied":"Bağlantı kopyalandı ✓","copyManual":"Lütfen bağlantıyı elle kopyala","loadFirst":"Önce bir video yükle","pasteDenied":"Yapıştırmaya izin verilmedi – lütfen elle yapıştır","pasteManual":"Lütfen elle yapıştır","noFs":"Tam ekran burada desteklenmiyor","favOn":"Favori olarak en üste sabitlendi","favOff":"Favori kaldırıldı","errShort":"{h} gibi kısa bağlantılar burada çözülemez. Bağlantıyı tarayıcıda kısaca aç, sonra YouTube adresini kopyala.","errGoogle":"Bu, YouTube adresi içermeyen bir Google bağlantısı. Videoyu YouTube'da aç, “Paylaş”a dokun ve bağlantıyı oradan kopyala.","errUnsup":"{h} videoları yerleştirilemez. YouTube, Vimeo, Dailymotion veya Streamable bağlantısı ya da doğrudan MP4 bağlantısı kullan.","errBad":"Lütfen geçerli bir video bağlantısı yapıştır.","detVideo":"✓ {p} videosu algılandı","detList":"✓ {p} oynatma listesi algılandı","blk100":"Bu video kullanılamıyor (silinmiş veya özel).","blkEmb":"Sahibi burada yerleştirmeye izin vermiyor (hata {c}). Videoyu yine de doğrudan YouTube'da izleyebilirsin.","blk153":" İpucu: Sayfayı yerel dosya olarak değil, https üzerinden veya uygulama olarak aç.","ytOpen":"▶ YouTube'da izle","consentTxt":"Oynatmak için {p} oynatıcısı yüklenir. IP adresin gibi veriler {p} sağlayıcısına iletilir. Ayrıntılar aşağıdaki gizlilik politikasında.","consentBtn":"▶ Videoyu yükle ({p})","mp4err":"Video yüklenemedi. Bağlantının doğrudan bir MP4 dosyasına işaret ettiğini, https ile erişilebilir olduğunu ve yerleştirmeye izin verdiğini kontrol et.","count1":"{n} video","countN":"{n} video","emptyG":"Galerin henüz boş. Yüklenen videolar burada otomatik olarak kaydedilir.","nothing":"Hiçbir şey bulunamadı.","noRes":"Video bulunamadı.","sErr":"Herkese açık arama sunucuları şu anda yanıt vermiyor. Birazdan tekrar dene ya da doğrudan YouTube'da arayıp kopyaladığın bağlantıyı yukarı yapıştır.","chLbl":"Kanallar – tüm videoları görmek için dokun","play":"▶ Oynat","copyLink":"Bağlantıyı kopyala","favT":"Favori","renameT":"Yeniden adlandır","delT":"Kaldır","clrT":"Galeri temizlensin mi?","clrP":"Kaydedilen {n} videonun tümü galeriden kaldırılacak.","renT":"Videoyu yeniden adlandır","renOk":"Kaydet","vidT":"{p} videosu","listT":"{p} oynatma listesi"},"ru":{"tabL":"🔗 Ссылка","tabS":"🔍 Поиск","phUrl":"Вставьте ссылку YouTube, Google или MP4","paste":"Вставить","load":"▶ Загрузить","phTtl":"Название (необязательно)","phQ":"Найти ютубера или видео","search":"Найти","ytSearch":"Искать на YouTube ↗","more":"Загрузить ещё","note":"При поиске ваш запрос отправляется на публичные поисковые серверы (Piped), а миниатюры загружаются с YouTube. При этом передаётся, например, ваш IP-адрес.","helpS":"Справка: какие ссылки подходят?","help":"Работает с YouTube (видео, Shorts, трансляции, плейлисты, youtu.be, m.youtube.com), перенаправляющими ссылками Google («Копировать адрес ссылки» в поиске Google), Vimeo, Dailymotion, Streamable и прямыми ссылками на MP4/WebM (https). Подойдёт и просто идентификатор видео. Если владелец запретил встраивание, появится кнопка, которая откроет видео прямо на YouTube. Используйте только видео, на которые у вас есть права.","stagePh":"Вставьте ссылку и нажмите «Загрузить»","noVideo":"Видео ещё не загружено","orig":"↗ Открыть оригинал","fs":"⛶ Во весь экран","share":"🔗 Поделиться","copy":"Копировать","gallery":"Галерея","clear":"Очистить","phGq":"Поиск по галерее","prev":"Предыдущее видео","next":"Следующее видео","usage":"Правила использования","usageT":"Загружайте только видео, на которые у вас есть права или встраивание которых явно разрешено. Эта страница не хранит видео, а лишь встраивает контент с YouTube или указанных вами серверов. Скачивать, сохранять и записывать видео (в том числе с помощью записи экрана) запрещено.","priv":"Политика конфиденциальности (на немецком)","imp":"Выходные данные (на немецком)","cancel":"Отмена","ok":"OK","sett":"Настройки","theme":"Оформление","tSys":"Системная","tDark":"Тёмная","tLight":"Светлая","lang":"Язык","done":"Готово","copied":"Ссылка скопирована ✓","copyManual":"Скопируйте ссылку вручную","loadFirst":"Сначала загрузите видео","pasteDenied":"Вставка запрещена — вставьте вручную","pasteManual":"Вставьте вручную","noFs":"Полноэкранный режим здесь не поддерживается","favOn":"Закреплено вверху как избранное","favOff":"Убрано из избранного","errShort":"Короткие ссылки вроде {h} здесь не раскрываются. Откройте ссылку на секунду в браузере, затем скопируйте адрес YouTube.","errGoogle":"Это ссылка Google без адреса YouTube. Откройте видео на YouTube, нажмите «Поделиться» и скопируйте ссылку оттуда.","errUnsup":"Видео с {h} встроить нельзя. Используйте ссылку YouTube, Vimeo, Dailymotion или Streamable либо прямую ссылку на MP4.","errBad":"Вставьте корректную ссылку на видео.","detVideo":"✓ Видео {p} распознано","detList":"✓ Плейлист {p} распознан","blk100":"Это видео недоступно (удалено или приватное).","blkEmb":"Владелец запретил встраивание (ошибка {c}). Видео всё равно можно посмотреть прямо на YouTube.","blk153":" Совет: откройте страницу по https или как приложение, а не как локальный файл.","ytOpen":"▶ Смотреть на YouTube","consentTxt":"Для воспроизведения загружается плеер {p}. При этом такие данные, как ваш IP-адрес, передаются {p}. Подробности — в политике конфиденциальности ниже.","consentBtn":"▶ Загрузить видео ({p})","mp4err":"Не удалось загрузить видео. Убедитесь, что ссылка ведёт прямо на файл MP4, доступна по https и разрешает встраивание.","count1":"{n} видео","countN":"{n} видео","emptyG":"Галерея пока пуста. Загруженные видео сохраняются здесь автоматически.","nothing":"Ничего не найдено.","noRes":"Видео не найдены.","sErr":"Публичные поисковые серверы сейчас не отвечают. Попробуйте ещё раз чуть позже или найдите видео прямо на YouTube и вставьте скопированную ссылку выше.","chLbl":"Каналы — нажмите, чтобы увидеть все видео","play":"▶ Смотреть","copyLink":"Копировать ссылку","favT":"Избранное","renameT":"Переименовать","delT":"Удалить","clrT":"Очистить галерею?","clrP":"Все сохранённые видео ({n}) будут удалены из галереи.","renT":"Переименовать видео","renOk":"Сохранить","vidT":"Видео {p}","listT":"Плейлист {p}"},"uk":{"tabL":"🔗 Посилання","tabS":"🔍 Пошук","phUrl":"Вставте посилання YouTube, Google або MP4","paste":"Вставити","load":"▶ Завантажити","phTtl":"Назва (необов’язково)","phQ":"Знайти ютубера або відео","search":"Шукати","ytSearch":"Шукати на YouTube ↗","more":"Завантажити ще","note":"Під час пошуку ваш запит надсилається на публічні пошукові сервери (Piped), а мініатюри завантажуються з YouTube. Під час цього передається, наприклад, ваша IP-адреса.","helpS":"Довідка: які посилання підходять?","help":"Працює з YouTube (відео, Shorts, трансляції, плейлисти, youtu.be, m.youtube.com), посиланнями-перенаправленнями Google («Копіювати адресу посилання» в пошуку Google), Vimeo, Dailymotion, Streamable і прямими посиланнями на MP4/WebM (https). Підійде й сам ідентифікатор відео. Якщо власник заборонив вбудовування, з’явиться кнопка, що відкриє відео просто на YouTube. Використовуйте лише відео, на які маєте права.","stagePh":"Вставте посилання й натисніть «Завантажити»","noVideo":"Відео ще не завантажено","orig":"↗ Відкрити оригінал","fs":"⛶ На весь екран","share":"🔗 Поділитися","copy":"Копіювати","gallery":"Галерея","clear":"Очистити","phGq":"Пошук у галереї","prev":"Попереднє відео","next":"Наступне відео","usage":"Правила користування","usageT":"Завантажуйте лише відео, на які маєте права або вбудовування яких прямо дозволено. Ця сторінка не зберігає відео, а лише вбудовує вміст із YouTube або вказаних вами серверів. Завантажувати, зберігати та записувати відео (зокрема записом екрана) заборонено.","priv":"Політика конфіденційності (німецькою)","imp":"Вихідні дані (німецькою)","cancel":"Скасувати","ok":"OK","sett":"Налаштування","theme":"Вигляд","tSys":"Системна","tDark":"Темна","tLight":"Світла","lang":"Мова","done":"Готово","copied":"Посилання скопійовано ✓","copyManual":"Скопіюйте посилання вручну","loadFirst":"Спочатку завантажте відео","pasteDenied":"Вставляння заборонено — вставте вручну","pasteManual":"Вставте вручну","noFs":"Повноекранний режим тут не підтримується","favOn":"Закріплено вгорі як улюблене","favOff":"Прибрано з улюблених","errShort":"Короткі посилання на кшталт {h} тут не розкриваються. Відкрийте посилання на мить у браузері, а потім скопіюйте адресу YouTube.","errGoogle":"Це посилання Google без адреси YouTube. Відкрийте відео на YouTube, натисніть «Поділитися» і скопіюйте посилання звідти.","errUnsup":"Відео з {h} вбудувати не можна. Скористайтеся посиланням YouTube, Vimeo, Dailymotion або Streamable чи прямим посиланням на MP4.","errBad":"Вставте дійсне посилання на відео.","detVideo":"✓ Відео {p} розпізнано","detList":"✓ Плейлист {p} розпізнано","blk100":"Це відео недоступне (видалене або приватне).","blkEmb":"Власник заборонив вбудовування (помилка {c}). Відео все одно можна переглянути безпосередньо на YouTube.","blk153":" Порада: відкрийте сторінку через https або як застосунок, а не як локальний файл.","ytOpen":"▶ Дивитися на YouTube","consentTxt":"Для відтворення завантажується плеєр {p}. Під час цього такі дані, як ваша IP-адреса, передаються {p}. Докладніше — у політиці конфіденційності нижче.","consentBtn":"▶ Завантажити відео ({p})","mp4err":"Не вдалося завантажити відео. Переконайтеся, що посилання веде безпосередньо на файл MP4, доступне через https і дозволяє вбудовування.","count1":"{n} відео","countN":"{n} відео","emptyG":"Галерея поки порожня. Завантажені відео зберігаються тут автоматично.","nothing":"Нічого не знайдено.","noRes":"Відео не знайдено.","sErr":"Публічні пошукові сервери зараз не відповідають. Спробуйте ще раз трохи пізніше або знайдіть відео прямо на YouTube і вставте скопійоване посилання вище.","chLbl":"Канали — натисніть, щоб побачити всі відео","play":"▶ Дивитися","copyLink":"Копіювати посилання","favT":"Улюблене","renameT":"Перейменувати","delT":"Видалити","clrT":"Очистити галерею?","clrP":"Усі збережені відео ({n}) буде видалено з галереї.","renT":"Перейменувати відео","renOk":"Зберегти","vidT":"Відео {p}","listT":"Плейлист {p}"},"it":{"tabL":"🔗 Link","tabS":"🔍 Cerca","phUrl":"Incolla un link YouTube, Google o MP4","paste":"Incolla","load":"▶ Carica","phTtl":"Titolo (facoltativo)","phQ":"Cerca uno YouTuber o il nome di un video","search":"Cerca","ytSearch":"Cerca su YouTube ↗","more":"Carica altri","note":"Quando cerchi, il termine di ricerca viene inviato a server di ricerca pubblici (Piped) e le anteprime vengono caricate da YouTube. Così viene trasmesso, ad esempio, il tuo indirizzo IP.","helpS":"Aiuto: quali link funzionano?","help":"Funziona con YouTube (video, Shorts, dirette, playlist, youtu.be, m.youtube.com), link di reindirizzamento di Google («Copia indirizzo link» nella ricerca Google), Vimeo, Dailymotion, Streamable e link diretti MP4/WebM (https). Va bene anche il solo ID del video. Se il proprietario blocca l’incorporamento, compare un pulsante che apre il video direttamente su YouTube. Usa solo video di cui hai i diritti.","stagePh":"Incolla un link e tocca «Carica»","noVideo":"Nessun video caricato","orig":"↗ Apri originale","fs":"⛶ Schermo intero","share":"🔗 Condividi","copy":"Copia","gallery":"Galleria","clear":"Svuota","phGq":"Cerca nella galleria","prev":"Video precedente","next":"Video successivo","usage":"Note d’uso","usageT":"Carica solo video di cui hai i diritti o il cui incorporamento è espressamente consentito. Questa pagina non salva video: incorpora solo contenuti di YouTube o dei server che indichi. Scaricare, salvare e registrare i video (anche con la registrazione dello schermo) non è consentito.","priv":"Informativa sulla privacy (in tedesco)","imp":"Note legali (in tedesco)","cancel":"Annulla","ok":"OK","sett":"Impostazioni","theme":"Aspetto","tSys":"Sistema","tDark":"Scuro","tLight":"Chiaro","lang":"Lingua","done":"Fatto","copied":"Link copiato ✓","copyManual":"Copia il link manualmente","loadFirst":"Carica prima un video","pasteDenied":"Incolla non consentito: incolla manualmente","pasteManual":"Incolla manualmente","noFs":"Lo schermo intero non è supportato qui","favOn":"Fissato in alto come preferito","favOff":"Preferito rimosso","errShort":"I link brevi come {h} non possono essere risolti qui. Apri il link un attimo nel browser, poi copia l’indirizzo YouTube.","errGoogle":"Questo è un link Google senza indirizzo YouTube. Apri il video su YouTube, tocca «Condividi» e copia il link da lì.","errUnsup":"I video di {h} non possono essere incorporati. Usa un link YouTube, Vimeo, Dailymotion o Streamable oppure un link MP4 diretto.","errBad":"Incolla un link video valido.","detVideo":"✓ Video {p} riconosciuto","detList":"✓ Playlist {p} riconosciuta","blk100":"Questo video non è disponibile (eliminato o privato).","blkEmb":"Il proprietario non consente l’incorporamento qui (errore {c}). Puoi comunque guardare il video direttamente su YouTube.","blk153":" Suggerimento: apri la pagina tramite https o come app, non come file locale.","ytOpen":"▶ Guarda su YouTube","consentTxt":"Per la riproduzione viene caricato il player di {p}. Dati come il tuo indirizzo IP vengono trasmessi a {p}. I dettagli sono nell’informativa sulla privacy qui sotto.","consentBtn":"▶ Carica video ({p})","mp4err":"Impossibile caricare il video. Verifica che il link punti direttamente a un file MP4, sia raggiungibile via https e consenta l’incorporamento.","count1":"{n} video","countN":"{n} video","emptyG":"La tua galleria è ancora vuota. I video caricati vengono salvati qui automaticamente.","nothing":"Nessun risultato.","noRes":"Nessun video trovato.","sErr":"I server di ricerca pubblici non rispondono al momento. Riprova tra poco oppure cerca direttamente su YouTube e incolla qui sopra il link copiato.","chLbl":"Canali: tocca per vedere tutti i video","play":"▶ Riproduci","copyLink":"Copia link","favT":"Preferito","renameT":"Rinomina","delT":"Rimuovi","clrT":"Svuotare la galleria?","clrP":"Tutti i {n} video salvati verranno rimossi dalla galleria.","renT":"Rinomina video","renOk":"Salva","vidT":"Video {p}","listT":"Playlist {p}"},"pt":{"tabL":"🔗 Link","tabS":"🔍 Buscar","phUrl":"Cole um link do YouTube, Google ou MP4","paste":"Colar","load":"▶ Carregar","phTtl":"Título (opcional)","phQ":"Busque um YouTuber ou o nome de um vídeo","search":"Buscar","ytSearch":"Buscar no YouTube ↗","more":"Carregar mais","note":"Ao buscar, seu termo de pesquisa é enviado a servidores de busca públicos (Piped) e as miniaturas são carregadas do YouTube. Isso transmite, por exemplo, seu endereço IP.","helpS":"Ajuda: quais links funcionam?","help":"Funciona com YouTube (vídeos, Shorts, transmissões ao vivo, playlists, youtu.be, m.youtube.com), links de redirecionamento do Google («Copiar endereço do link» na busca do Google), Vimeo, Dailymotion, Streamable e links diretos MP4/WebM (https). O ID do vídeo sozinho também funciona. Se o proprietário bloquear a incorporação, aparece um botão que abre o vídeo diretamente no YouTube. Use apenas vídeos dos quais você tenha os direitos.","stagePh":"Cole um link e toque em «Carregar»","noVideo":"Nenhum vídeo carregado ainda","orig":"↗ Abrir original","fs":"⛶ Tela cheia","share":"🔗 Compartilhar","copy":"Copiar","gallery":"Galeria","clear":"Limpar","phGq":"Buscar na galeria","prev":"Vídeo anterior","next":"Próximo vídeo","usage":"Aviso de uso","usageT":"Carregue apenas vídeos dos quais você tenha os direitos ou cuja incorporação seja expressamente permitida. Esta página não armazena vídeos; apenas incorpora conteúdo do YouTube ou de servidores que você indicar. Não é permitido baixar, salvar nem gravar os vídeos (inclusive por gravação de tela).","priv":"Política de privacidade (em alemão)","imp":"Aviso legal (em alemão)","cancel":"Cancelar","ok":"OK","sett":"Configurações","theme":"Aparência","tSys":"Sistema","tDark":"Escuro","tLight":"Claro","lang":"Idioma","done":"Concluído","copied":"Link copiado ✓","copyManual":"Copie o link manualmente","loadFirst":"Carregue um vídeo primeiro","pasteDenied":"Colar não permitido – cole manualmente","pasteManual":"Cole manualmente","noFs":"Tela cheia não é compatível aqui","favOn":"Fixado no topo como favorito","favOff":"Favorito removido","errShort":"Links curtos como {h} não podem ser resolvidos aqui. Abra o link rapidamente no navegador e depois copie o endereço do YouTube.","errGoogle":"Este é um link do Google sem endereço do YouTube. Abra o vídeo no YouTube, toque em «Compartilhar» e copie o link de lá.","errUnsup":"Vídeos de {h} não podem ser incorporados. Use um link do YouTube, Vimeo, Dailymotion ou Streamable, ou um link MP4 direto.","errBad":"Cole um link de vídeo válido.","detVideo":"✓ Vídeo do {p} reconhecido","detList":"✓ Playlist do {p} reconhecida","blk100":"Este vídeo não está disponível (excluído ou privado).","blkEmb":"O proprietário não permite a incorporação aqui (erro {c}). Você ainda pode assistir ao vídeo diretamente no YouTube.","blk153":" Dica: abra a página por https ou como app, não como arquivo local.","ytOpen":"▶ Assistir no YouTube","consentTxt":"Para reproduzir, o player do {p} é carregado. Dados como seu endereço IP são transmitidos ao {p}. Os detalhes estão na política de privacidade abaixo.","consentBtn":"▶ Carregar vídeo ({p})","mp4err":"Não foi possível carregar o vídeo. Verifique se o link aponta diretamente para um arquivo MP4, está acessível por https e permite incorporação.","count1":"{n} vídeo","countN":"{n} vídeos","emptyG":"Sua galeria ainda está vazia. Os vídeos carregados são salvos aqui automaticamente.","nothing":"Nada encontrado.","noRes":"Nenhum vídeo encontrado.","sErr":"Os servidores de busca públicos não estão respondendo agora. Tente novamente em instantes ou busque diretamente no YouTube e cole o link copiado acima.","chLbl":"Canais – toque para ver todos os vídeos","play":"▶ Reproduzir","copyLink":"Copiar link","favT":"Favorito","renameT":"Renomear","delT":"Remover","clrT":"Limpar a galeria?","clrP":"Todos os {n} vídeos salvos serão removidos da galeria.","renT":"Renomear vídeo","renOk":"Salvar","vidT":"Vídeo do {p}","listT":"Playlist do {p}"},"pl":{"tabL":"🔗 Link","tabS":"🔍 Szukaj","phUrl":"Wklej link do YouTube, Google lub MP4","paste":"Wklej","load":"▶ Wczytaj","phTtl":"Tytuł (opcjonalnie)","phQ":"Szukaj youtubera lub nazwy filmu","search":"Szukaj","ytSearch":"Szukaj w YouTube ↗","more":"Wczytaj więcej","note":"Podczas wyszukiwania Twoje zapytanie jest wysyłane do publicznych serwerów wyszukiwania (Piped), a miniatury są ładowane z YouTube. Przesyłany jest wtedy np. Twój adres IP.","helpS":"Pomoc: jakie linki działają?","help":"Działa z YouTube (filmy, Shorts, transmisje na żywo, playlisty, youtu.be, m.youtube.com), linkami przekierowującymi Google („Kopiuj adres linku” w wyszukiwarce Google), Vimeo, Dailymotion, Streamable oraz bezpośrednimi linkami MP4/WebM (https). Wystarczy też sam identyfikator filmu. Jeśli właściciel blokuje osadzanie, pojawi się przycisk otwierający film bezpośrednio w YouTube. Używaj tylko filmów, do których masz prawa.","stagePh":"Wklej link i dotknij „Wczytaj”","noVideo":"Nie wczytano jeszcze filmu","orig":"↗ Otwórz oryginał","fs":"⛶ Pełny ekran","share":"🔗 Udostępnij","copy":"Kopiuj","gallery":"Galeria","clear":"Wyczyść","phGq":"Szukaj w galerii","prev":"Poprzedni film","next":"Następny film","usage":"Zasady korzystania","usageT":"Wczytuj tylko filmy, do których masz prawa lub których osadzanie jest wyraźnie dozwolone. Ta strona nie przechowuje filmów, a jedynie osadza treści z YouTube lub z podanych przez Ciebie serwerów. Pobieranie, zapisywanie i nagrywanie filmów (także nagrywaniem ekranu) jest zabronione.","priv":"Polityka prywatności (po niemiecku)","imp":"Nota prawna (po niemiecku)","cancel":"Anuluj","ok":"OK","sett":"Ustawienia","theme":"Wygląd","tSys":"Systemowy","tDark":"Ciemny","tLight":"Jasny","lang":"Język","done":"Gotowe","copied":"Skopiowano link ✓","copyManual":"Skopiuj link ręcznie","loadFirst":"Najpierw wczytaj film","pasteDenied":"Wklejanie niedozwolone – wklej ręcznie","pasteManual":"Wklej ręcznie","noFs":"Pełny ekran nie jest tu obsługiwany","favOn":"Przypięto na górze jako ulubiony","favOff":"Usunięto z ulubionych","errShort":"Krótkich linków takich jak {h} nie da się tu rozwinąć. Otwórz link na chwilę w przeglądarce, a potem skopiuj adres YouTube.","errGoogle":"To link Google bez adresu YouTube. Otwórz film w YouTube, dotknij „Udostępnij” i skopiuj stamtąd link.","errUnsup":"Filmów z {h} nie można osadzić. Użyj linku YouTube, Vimeo, Dailymotion lub Streamable albo bezpośredniego linku MP4.","errBad":"Wklej prawidłowy link do filmu.","detVideo":"✓ Rozpoznano film z {p}","detList":"✓ Rozpoznano playlistę z {p}","blk100":"Ten film jest niedostępny (usunięty lub prywatny).","blkEmb":"Właściciel nie zezwala tu na osadzanie (błąd {c}). Film nadal możesz obejrzeć bezpośrednio w YouTube.","blk153":" Wskazówka: otwórz stronę przez https lub jako aplikację, a nie jako plik lokalny.","ytOpen":"▶ Oglądaj w YouTube","consentTxt":"Do odtwarzania ładowany jest odtwarzacz {p}. Dane takie jak Twój adres IP są przesyłane do {p}. Szczegóły w polityce prywatności poniżej.","consentBtn":"▶ Wczytaj film ({p})","mp4err":"Nie udało się wczytać filmu. Sprawdź, czy link prowadzi bezpośrednio do pliku MP4, jest dostępny przez https i pozwala na osadzanie.","count1":"Filmy: {n}","countN":"Filmy: {n}","emptyG":"Twoja galeria jest jeszcze pusta. Wczytane filmy zapisują się tutaj automatycznie.","nothing":"Nic nie znaleziono.","noRes":"Nie znaleziono filmów.","sErr":"Publiczne serwery wyszukiwania nie odpowiadają. Spróbuj za chwilę lub wyszukaj bezpośrednio w YouTube i wklej skopiowany link powyżej.","chLbl":"Kanały – dotknij, aby zobaczyć wszystkie filmy","play":"▶ Odtwórz","copyLink":"Kopiuj link","favT":"Ulubiony","renameT":"Zmień nazwę","delT":"Usuń","clrT":"Wyczyścić galerię?","clrP":"Wszystkie zapisane filmy ({n}) zostaną usunięte z galerii.","renT":"Zmień nazwę filmu","renOk":"Zapisz","vidT":"Film z {p}","listT":"Playlista z {p}"},"nl":{"tabL":"🔗 Link","tabS":"🔍 Zoeken","phUrl":"Plak een YouTube-, Google- of MP4-link","paste":"Plakken","load":"▶ Laden","phTtl":"Titel (optioneel)","phQ":"Zoek een YouTuber of videonaam","search":"Zoeken","ytSearch":"Zoeken op YouTube ↗","more":"Meer laden","note":"Bij het zoeken wordt je zoekterm naar openbare zoekservers (Piped) gestuurd en worden miniaturen van YouTube geladen. Daarbij wordt bijvoorbeeld je IP-adres doorgegeven.","helpS":"Help: welke links werken?","help":"Werkt met YouTube (video’s, Shorts, livestreams, afspeellijsten, youtu.be, m.youtube.com), Google-doorverwijslinks („Linkadres kopiëren” in Google Zoeken), Vimeo, Dailymotion, Streamable en directe MP4-/WebM-links (https). Alleen het video-ID werkt ook. Blokkeert de eigenaar insluiten, dan verschijnt er een knop die de video direct op YouTube opent. Gebruik alleen video’s waarvan je de rechten hebt.","stagePh":"Plak een link en tik op „Laden”","noVideo":"Nog geen video geladen","orig":"↗ Origineel openen","fs":"⛶ Volledig scherm","share":"🔗 Delen","copy":"Kopiëren","gallery":"Galerij","clear":"Wissen","phGq":"Galerij doorzoeken","prev":"Vorige video","next":"Volgende video","usage":"Gebruiksinformatie","usageT":"Laad alleen video’s waarvan je de rechten hebt of waarvan insluiten uitdrukkelijk is toegestaan. Deze pagina slaat geen video’s op; ze sluit alleen inhoud van YouTube of van door jou opgegeven servers in. Het downloaden, opslaan en opnemen van de video’s (ook via schermopname) is niet toegestaan.","priv":"Privacybeleid (in het Duits)","imp":"Colofon (in het Duits)","cancel":"Annuleren","ok":"OK","sett":"Instellingen","theme":"Uiterlijk","tSys":"Systeem","tDark":"Donker","tLight":"Licht","lang":"Taal","done":"Klaar","copied":"Link gekopieerd ✓","copyManual":"Kopieer de link handmatig","loadFirst":"Laad eerst een video","pasteDenied":"Plakken niet toegestaan – plak handmatig","pasteManual":"Plak handmatig","noFs":"Volledig scherm wordt hier niet ondersteund","favOn":"Bovenaan vastgezet als favoriet","favOff":"Favoriet verwijderd","errShort":"Korte links zoals {h} kunnen hier niet worden omgezet. Open de link even in de browser en kopieer daarna het YouTube-adres.","errGoogle":"Dit is een Google-link zonder YouTube-adres. Open de video op YouTube, tik op „Delen” en kopieer de link vanaf daar.","errUnsup":"Video’s van {h} kunnen niet worden ingesloten. Gebruik een YouTube-, Vimeo-, Dailymotion- of Streamable-link of een directe MP4-link.","errBad":"Plak een geldige videolink.","detVideo":"✓ {p}-video herkend","detList":"✓ {p}-afspeellijst herkend","blk100":"Deze video is niet beschikbaar (verwijderd of privé).","blkEmb":"De eigenaar staat insluiten hier niet toe (fout {c}). Je kunt de video wel direct op YouTube bekijken.","blk153":" Tip: open de pagina via https of als app, niet als lokaal bestand.","ytOpen":"▶ Bekijken op YouTube","consentTxt":"Voor het afspelen wordt de speler van {p} geladen. Daarbij worden gegevens zoals je IP-adres naar {p} verstuurd. Details staan in het privacybeleid hieronder.","consentBtn":"▶ Video laden ({p})","mp4err":"De video kon niet worden geladen. Controleer of de link rechtstreeks naar een MP4-bestand verwijst, via https bereikbaar is en insluiten toestaat.","count1":"{n} video","countN":"{n} video’s","emptyG":"Je galerij is nog leeg. Geladen video’s worden hier automatisch opgeslagen.","nothing":"Niets gevonden.","noRes":"Geen video’s gevonden.","sErr":"De openbare zoekservers reageren op dit moment niet. Probeer het zo nog eens of zoek direct op YouTube en plak de gekopieerde link hierboven.","chLbl":"Kanalen – tik om alle video’s te zien","play":"▶ Afspelen","copyLink":"Link kopiëren","favT":"Favoriet","renameT":"Hernoemen","delT":"Verwijderen","clrT":"Galerij wissen?","clrP":"Alle {n} opgeslagen video’s worden uit de galerij verwijderd.","renT":"Video hernoemen","renOk":"Opslaan","vidT":"{p}-video","listT":"{p}-afspeellijst"},"ja":{"tabL":"🔗 リンク","tabS":"🔍 検索","phUrl":"YouTube・Google・MP4のリンクを貼り付け","paste":"貼り付け","load":"▶ 読み込む","phTtl":"タイトル(任意)","phQ":"YouTuberや動画名を検索","search":"検索","more":"さらに読み込む","stagePh":"リンクを貼り付けて「読み込む」をタップ","orig":"↗ 元を開く","fs":"⛶ 全画面","share":"🔗 共有","copy":"コピー","gallery":"ギャラリー","clear":"削除","prev":"前の動画","next":"次の動画","sett":"設定","theme":"外観","tSys":"システム","tDark":"ダーク","tLight":"ライト","lang":"言語","done":"完了","cancel":"キャンセル","copied":"リンクをコピーしました ✓","loadFirst":"先に動画を読み込んでください","play":"▶ 再生","ytOpen":"▶ YouTubeで見る","count1":"{n}本の動画","countN":"{n}本の動画","emptyG":"ギャラリーはまだ空です。読み込んだ動画は自動的にここに保存されます。"},"ko":{"tabL":"🔗 링크","tabS":"🔍 검색","phUrl":"YouTube, Google 또는 MP4 링크 붙여넣기","paste":"붙여넣기","load":"▶ 불러오기","phTtl":"제목(선택)","phQ":"유튜버나 동영상 이름 검색","search":"검색","more":"더 불러오기","stagePh":"링크를 붙여넣고 '불러오기'를 누르세요","orig":"↗ 원본 열기","fs":"⛶ 전체 화면","share":"🔗 공유","copy":"복사","gallery":"갤러리","clear":"비우기","prev":"이전 동영상","next":"다음 동영상","sett":"설정","theme":"화면 스타일","tSys":"시스템","tDark":"다크","tLight":"라이트","lang":"언어","done":"완료","cancel":"취소","copied":"링크가 복사되었습니다 ✓","loadFirst":"먼저 동영상을 불러오세요","play":"▶ 재생","ytOpen":"▶ YouTube에서 보기","count1":"동영상 {n}개","countN":"동영상 {n}개","emptyG":"갤러리가 아직 비어 있습니다. 불러온 동영상은 여기에 자동으로 저장됩니다."},"ar":{"tabL":"🔗 رابط","tabS":"🔍 بحث","phUrl":"الصق رابط YouTube أو Google أو MP4","paste":"لصق","load":"▶ تحميل","phTtl":"العنوان (اختياري)","phQ":"ابحث عن يوتيوبر أو اسم فيديو","search":"بحث","more":"تحميل المزيد","stagePh":"الصق رابطًا ثم اضغط «تحميل»","orig":"↗ فتح الأصل","fs":"⛶ ملء الشاشة","share":"🔗 مشاركة","copy":"نسخ","gallery":"المعرض","clear":"مسح","prev":"الفيديو السابق","next":"الفيديو التالي","sett":"الإعدادات","theme":"المظهر","tSys":"النظام","tDark":"داكن","tLight":"فاتح","lang":"اللغة","done":"تم","cancel":"إلغاء","copied":"تم نسخ الرابط ✓","loadFirst":"حمّل فيديو أولًا","play":"▶ تشغيل","ytOpen":"▶ المشاهدة على YouTube","count1":"فيديو واحد","countN":"{n} فيديو","emptyG":"المعرض فارغ بعد. تُحفظ الفيديوهات المحمّلة هنا تلقائيًا."},"ur":{"tabL":"🔗 لنک","tabS":"🔍 تلاش","phUrl":"YouTube، Google یا MP4 لنک پیسٹ کریں","paste":"پیسٹ کریں","load":"▶ لوڈ کریں","phTtl":"عنوان (اختیاری)","phQ":"یوٹیوبر یا ویڈیو کا نام تلاش کریں","search":"تلاش","more":"مزید لوڈ کریں","stagePh":"لنک پیسٹ کریں اور «لوڈ کریں» دبائیں","orig":"↗ اصل کھولیں","fs":"⛶ مکمل اسکرین","share":"🔗 شیئر کریں","copy":"کاپی کریں","gallery":"گیلری","clear":"صاف کریں","prev":"پچھلی ویڈیو","next":"اگلی ویڈیو","sett":"ترتیبات","theme":"ظاہری شکل","tSys":"سسٹم","tDark":"ڈارک","tLight":"لائٹ","lang":"زبان","done":"ہو گیا","cancel":"منسوخ کریں","copied":"لنک کاپی ہو گیا ✓","loadFirst":"پہلے ایک ویڈیو لوڈ کریں","play":"▶ چلائیں","ytOpen":"▶ YouTube پر دیکھیں","count1":"{n} ویڈیو","countN":"{n} ویڈیوز","emptyG":"گیلری ابھی خالی ہے۔ لوڈ کی گئی ویڈیوز یہاں خودبخود محفوظ ہو جاتی ہیں۔"},"af":{"tabL":"🔗 Skakel","tabS":"🔍 Soek","phUrl":"Plak 'n YouTube-, Google- of MP4-skakel","paste":"Plak","load":"▶ Laai","phTtl":"Titel (opsioneel)","phQ":"Soek 'n YouTuber of video-naam","search":"Soek","more":"Laai meer","stagePh":"Plak 'n skakel en tik op «Laai»","orig":"↗ Maak oorspronklike oop","fs":"⛶ Volskerm","share":"🔗 Deel","copy":"Kopieer","gallery":"Galery","clear":"Maak leeg","prev":"Vorige video","next":"Volgende video","sett":"Instellings","theme":"Voorkoms","tSys":"Stelsel","tDark":"Donker","tLight":"Lig","lang":"Taal","done":"Klaar","cancel":"Kanselleer","copied":"Skakel gekopieer ✓","loadFirst":"Laai eers 'n video","play":"▶ Speel","ytOpen":"▶ Kyk op YouTube","count1":"{n} video","countN":"{n} video's","emptyG":"Jou galery is nog leeg. Gelaaide video's word outomaties hier gestoor."},"mk":{"tabL":"🔗 Линк","tabS":"🔍 Пребарување","phUrl":"Залепете линк од YouTube, Google или MP4","paste":"Залепи","load":"▶ Вчитај","phTtl":"Наслов (по избор)","phQ":"Побарајте јутјубер или име на видео","search":"Барај","more":"Вчитај повеќе","stagePh":"Залепете линк и допрете «Вчитај»","orig":"↗ Отвори оригинал","fs":"⛶ Цел екран","share":"🔗 Сподели","copy":"Копирај","gallery":"Галерија","clear":"Исчисти","prev":"Претходно видео","next":"Следно видео","sett":"Поставки","theme":"Изглед","tSys":"Системски","tDark":"Темен","tLight":"Светол","lang":"Јазик","done":"Готово","cancel":"Откажи","copied":"Линкот е копиран ✓","loadFirst":"Прво вчитајте видео","play":"▶ Пушти","ytOpen":"▶ Гледај на YouTube","count1":"{n} видео","countN":"{n} видеа","emptyG":"Галеријата е сè уште празна. Вчитаните видеа автоматски се зачувуваат тука."},"cy":{"tabL":"🔗 Dolen","tabS":"🔍 Chwilio","phUrl":"Gludwch ddolen YouTube, Google neu MP4","paste":"Gludo","load":"▶ Llwytho","phTtl":"Teitl (dewisol)","phQ":"Chwiliwch am YouTuber neu enw fideo","search":"Chwilio","more":"Llwytho mwy","stagePh":"Gludwch ddolen a thapio «Llwytho»","orig":"↗ Agor y gwreiddiol","fs":"⛶ Sgrin lawn","share":"🔗 Rhannu","copy":"Copïo","gallery":"Oriel","clear":"Clirio","prev":"Fideo blaenorol","next":"Fideo nesaf","sett":"Gosodiadau","theme":"Ymddangosiad","tSys":"System","tDark":"Tywyll","tLight":"Golau","lang":"Iaith","done":"Wedi'i wneud","cancel":"Canslo","copied":"Dolen wedi'i chopïo ✓","loadFirst":"Llwythwch fideo yn gyntaf","play":"▶ Chwarae","ytOpen":"▶ Gwylio ar YouTube","count1":"{n} fideo","countN":"{n} fideo","emptyG":"Mae eich oriel yn wag o hyd. Mae fideos wedi'u llwytho yn cael eu cadw yma'n awtomatig."}};
+const LANGS={de:'Deutsch',en:'English',es:'Español',fr:'Français',tr:'Türkçe',ru:'Русский',uk:'Українська',it:'Italiano',pt:'Português',pl:'Polski',nl:'Nederlands',ja:'日本語',ko:'한국어',ar:'العربية',ur:'اردو',af:'Afrikaans',mk:'Македонски',cy:'Cymraeg'};
+let lang='';try{lang=localStorage.getItem('vp_lang')||''}catch(e){}
+if(!LANGS[lang])lang='de';
+const T_=(k,p)=>t(k,p);
+const t=(k,p)=>{const s=(T[lang]&&T[lang][k])||T.en[k]||T.de[k]||k;return p?s.replace(/\{(\w+)\}/g,(m,x)=>p[x]!==undefined?p[x]:m):s};
+let theme='system';try{theme=localStorage.getItem('vp_theme')||'system'}catch(e){}
+const mq=window.matchMedia?matchMedia('(prefers-color-scheme: light)'):null;
+function applyTheme(){
+  const l=theme==='light'||(theme==='system'&&mq&&mq.matches);
+  document.documentElement.setAttribute('data-theme',l?'light':'dark');
+  const m=document.querySelector('meta[name=theme-color]');if(m)m.content=l?'#f3f3f7':'#000000';
+  document.querySelectorAll('#themeSeg button').forEach(b=>b.classList.toggle('on',b.dataset.th===theme));
+}
+if(mq&&mq.addEventListener)mq.addEventListener('change',()=>{if(theme==='system')applyTheme()});
+
+let gallery=[];const trim=()=>{let n=0;gallery=gallery.filter(g=>g.fav||(n++<60))};
+try{gallery=JSON.parse(localStorage.getItem('vp_gallery')||'[]')}catch(e){gallery=[]}
+function persist(){try{localStorage.setItem('vp_gallery',JSON.stringify(gallery))}catch(e){}}
+let current=null,toastT;
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove('on'),2200)}
+const enc=s=>Array.from(new TextEncoder().encode(s)).map(b=>b.toString(16).padStart(2,'0')).join('');
+const dec=h=>new TextDecoder().decode(new Uint8Array(h.match(/../g).map(x=>parseInt(x,16))));
+function shareId(v){return 'v'+enc(v.type==='yt'?'y|'+v.id+'|'+(v.start||0):v.type==='ex'?'x|'+v.prov+'|'+v.id:'m|'+v.url)}
+function fromId(id){try{const p=dec(id.slice(1)).split('|');if(p[0]==='y')return{type:'yt',id:p[1],start:+p[2]||0};if(p[0]==='x')return{type:'ex',prov:p[1],id:p.slice(2).join('|')};if(p[0]==='m')return parse(p.slice(1).join('|'))}catch(e){}return null}
+function secs(t){if(!t)return 0;if(/^\d+$/.test(t))return +t;const m=t.match(/(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?/);return m?(+m[1]||0)*3600+(+m[2]||0)*60+(+m[3]||0):0}
+const YTRE=/(?:youtube(?:-nocookie)?\.com\/(?:watch\/?\?(?:v=|[^\s#]*?&v=)|embed\/|shorts\/|live\/|v\/|e\/|vi\/)|youtu\.be\/|ytimg\.com\/vi(?:_webp)?\/|vnd\.youtube:(?:\/\/)?|youtube:\/\/(?:watch\?v=)?)([\w-]{11})/i;
+const dec1=s=>s.replace(/(?:%[0-9a-f]{2})+/gi,m=>{try{return decodeURIComponent(m)}catch(e){return m}});
+function yt(s){
+  let d=s;
+  for(let i=0;i<4;i++){
+    const m=d.match(YTRE);
+    if(m){const tm=d.slice(m.index).match(/[?&#](?:t|start)=([\dhms]+)/i);return{type:'yt',id:m[1],start:tm?secs(tm[1]):0}}
+    const n=dec1(d);if(n===d)break;d=n;
+  }
+  return null;
+}
+function parse(raw,n){
+  n=n||0;
+  let s=(raw||'').replace(/[\u200b-\u200d\u2060\ufeff]/g,'').trim();
+  if(!s||n>4)return null;
+  if(/^[\w-]{11}$/.test(s))return{type:'yt',id:s,start:0};
+  const y=yt(s);if(y)return y;
+  const mm=s.match(/https?:\/\/[^\s<>"”“]+/i);if(mm)s=mm[0];
+  if(!/^https?:\/\//i.test(s))s='https://'+s;
+  let u;try{u=new URL(s)}catch(e){return null}
+  const host=u.hostname.toLowerCase(),p=u.searchParams;
+  if(host.indexOf('.')<0)return null;
+  if(/(^|\.)google\.[a-z.]+$/.test(host)){
+    const am=u.pathname.match(/^\/amp\/s\/(.+)/);if(am)return parse('https://'+am[1],n+1);
+    if(u.pathname==='/url')for(const k of['url','q']){const t=p.get(k);if(t&&/^https?:\/\//i.test(t)){const r=parse(t,n+1);if(r)return r}}
+    return{type:'unsup',host,g:1};
+  }
+  if(/^(goo\.gl|g\.co|share\.google|bit\.ly|t\.co|tinyurl\.com|youtube\.app\.goo\.gl|lnkd\.in|is\.gd|ow\.ly)$/.test(host))return{type:'unsup',host,short:1};
+  if(host==='youtu.be'||/(^|\.)youtube(-nocookie)?\.com$/.test(host)){
+    const a=u.pathname==='/attribution_link'&&p.get('u');
+    if(a&&a[0]==='/')return parse('https://www.youtube.com'+a,n+1);
+    const l=p.get('list');return l&&/^[\w-]+$/.test(l)?{type:'ex',prov:'ytlist',id:l}:null;
+  }
+  let m;
+  if(/(^|\.)vimeo\.com$/.test(host)&&(m=u.pathname.match(/\/(?:video\/)?(\d+)(?:\/([0-9a-f]+))?/))){const h=m[2]||u.searchParams.get('h');return{type:'ex',prov:'vimeo',id:m[1]+(h?'?h='+h:'')}}
+  if((/(^|\.)dailymotion\.com$/.test(host)&&(m=u.pathname.match(/\/video\/([a-z0-9]+)/i)))||(host==='dai.ly'&&(m=u.pathname.match(/\/([a-z0-9]+)/i))))return{type:'ex',prov:'dailymotion',id:m[1]};
+  if(host==='streamable.com'&&(m=u.pathname.match(/\/(?:e\/)?([a-z0-9]+)/i)))return{type:'ex',prov:'streamable',id:m[1]};
+  if(/(^|\.)(tiktok|instagram|facebook|netflix|primevideo|disneyplus|twitter|x)\.com$/.test(host))return{type:'unsup',host};
+  return{type:'mp4',url:u.href};
+}
+function defTitle(v){
+  if(v.type==='yt')return 'YouTube-Video ('+v.id+')';
+  if(v.type==='ex')return provName(v)+(v.prov==='ytlist'?'-Playlist':'-Video');
+  try{const n=decodeURIComponent(new URL(v.url).pathname.split('/').filter(Boolean).pop()||'');return n||new URL(v.url).hostname}catch(e){return 'MP4-Video'}
+}
+function locTitle(v){
+  if(v.type==='yt')return t('vidT',{p:'YouTube'})+' ('+v.id+')';
+  if(v.type==='ex')return t(v.prov==='ytlist'?'listT':'vidT',{p:provName(v)});
+  return defTitle(v);
+}
+const dsp=(title,v)=>title===defTitle(v)?locTitle(v):title;
+let ytOk={};
+function embedSrc(v,a){
+  if(v.type==='yt')return 'https://www.youtube-nocookie.com/embed/'+v.id+'?rel=0&playsinline=1&enablejsapi=1'+(/^https?:/.test(location.protocol)?'&origin='+encodeURIComponent(location.origin):'')+(a?'&autoplay=1':'')+(v.start?'&start='+v.start:'');
+  const q=a?'autoplay=1':'';
+  if(v.prov==='ytlist')return 'https://www.youtube-nocookie.com/embed/videoseries?list='+v.id+'&rel=0&playsinline=1'+(a?'&autoplay=1':'');
+  if(v.prov==='vimeo')return 'https://player.vimeo.com/video/'+v.id+(q?(v.id.includes('?')?'&':'?')+q:'');
+  if(v.prov==='dailymotion')return 'https://www.dailymotion.com/embed/video/'+v.id+(q?'?'+q:'');
+  return 'https://streamable.com/e/'+v.id+(q?'?'+q:'');
+}
+function provName(v){return v.type==='yt'||v.prov==='ytlist'?'YouTube':v.prov==='vimeo'?'Vimeo':v.prov==='dailymotion'?'Dailymotion':'Streamable'}
+function origUrl(v){
+  if(v.type==='yt')return 'https://www.youtube.com/watch?v='+v.id+(v.start?'&t='+v.start:'');
+  if(v.type==='mp4')return v.url;
+  const i=v.id.split('?')[0];
+  return v.prov==='ytlist'?'https://www.youtube.com/playlist?list='+v.id:v.prov==='vimeo'?'https://vimeo.com/'+i:v.prov==='dailymotion'?'https://www.dailymotion.com/video/'+i:'https://streamable.com/'+i;
+}
+function blocked(code){
+  if(!current||current.type==='mp4')return;
+  const st=$('#stage');if(st.querySelector('.blk'))return;
+  const c=document.createElement('div');c.className='ph blk';c.style.background='#000';c.style.zIndex='3';
+  const d=document.createElement('div');
+  const p=document.createElement('p');
+  p.style.cssText='max-width:460px;margin:0 auto 16px;line-height:1.5';
+  p.textContent=(code==100)?t('blk100'):t('blkEmb',{c:code});
+  if(code==153)p.textContent+=t('blk153');
+  const a=document.createElement('a');a.className='btn';a.style.background='var(--red)';a.textContent=t('ytOpen');a.style.color='#fff';
+  a.href=origUrl(current);a.target='_blank';a.rel='noopener noreferrer';
+  d.append(p,a);c.append(d);st.append(c);
+}
+window.addEventListener('message',e=>{
+  try{
+    if(!/(^|\.)youtube(-nocookie)?\.com$/.test(new URL(e.origin).hostname))return;
+    const d=typeof e.data==='string'?JSON.parse(e.data):e.data;
+    if(d&&d.event==='onError')blocked(d.info);
+    else if(d&&d.event==='infoDelivery'&&d.info&&d.info.errorCode)blocked(d.info.errorCode);
+  }catch(x){}
+});
+function consent(st,v,title){
+  const c=document.createElement('div');c.className='ph';
+  const d=document.createElement('div');
+  const p=document.createElement('p');
+  p.textContent=t('consentTxt',{p:provName(v)});
+  p.style.cssText='max-width:440px;margin:0 auto 16px;line-height:1.5';
+  const b=document.createElement('button');b.className='red';b.textContent=t('consentBtn',{p:provName(v)});
+  b.onclick=()=>{ytOk[provName(v)]=true;play(v,title,true)};
+  d.append(p,b);c.append(d);st.append(c);
+}
+function play(v,title,auto){
+  const st=$('#stage');st.innerHTML='';current=v;title=dsp(title,v);
+  const sp=document.createElement('div');sp.className='spin';
+  if(v.type!=='mp4'){
+    if(!ytOk[provName(v)]){consent(st,v,title)}else{const f=document.createElement('iframe');
+    f.src=embedSrc(v,auto);
+    f.allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen';
+    f.allowFullscreen=true;f.referrerPolicy='strict-origin-when-cross-origin';f.title=title;
+    f.onload=()=>{sp.remove();const hs=()=>{try{f.contentWindow.postMessage(JSON.stringify({event:'listening',id:1,channel:'widget'}),'*')}catch(e){}};hs();setTimeout(hs,800);setTimeout(hs,2500)};st.append(f,sp);setTimeout(()=>sp.remove(),6000);}
+  }else{
+    const vd=document.createElement('video');
+    vd.controls=true;vd.playsInline=true;vd.setAttribute('controlsList','nodownload');vd.preload='metadata';vd.src=v.url;
+    vd.onloadeddata=()=>sp.remove();
+    vd.onerror=()=>{sp.remove();$('#err').textContent=t('mp4err')};
+    st.append(vd,sp);
+    if(auto)vd.play().catch(()=>{});
+  }
+  $('#name').textContent=title;
+  const ex=$('#ext');ex.href=origUrl(v);ex.style.display=v.type==='mp4'?'none':'inline-flex';
+  const id=shareId(v),base=location.href.split('#')[0];
+  $('#link').value=base+'#'+id;mark(id);
+  try{if(location.hash.slice(1)!==id)location.hash=id}catch(e){}
+  st.scrollIntoView({behavior:'smooth',block:'center'});
+}
+function load(){
+  $('#err').textContent='';
+  const v=parse($('#url').value);
+  if(!v||v.type==='unsup'){$('#err').textContent=v&&v.short?t('errShort',{h:v.host}):v&&v.g?t('errGoogle'):v?t('errUnsup',{h:v.host}):t('errBad');return}
+  const title=$('#ttl').value.trim()||defTitle(v);
+  const id=shareId(v);
+  const i=gallery.findIndex(g=>g.id===id);
+  if(i>=0){gallery[i].title=$('#ttl').value.trim()||gallery[i].title;gallery.unshift(gallery.splice(i,1)[0])}
+  else gallery.unshift({id,title,v});
+  trim();persist();render();
+  play(v,gallery[0].title,true);fetchTitle(gallery[0]);
+}
+function mark(id){document.querySelectorAll('.item').forEach(e=>e.classList.toggle('on',e.dataset.id===id))}
+const emptyBox=k=>{const e=document.createElement('div');e.className='empty';e.textContent=t(k);return e};
+const sorted=()=>gallery.filter(x=>x.fav).concat(gallery.filter(x=>!x.fav));
+function render(){
+  const g=$('#grid');g.innerHTML='';
+  const gq=$('#gq');gq.hidden=gallery.length<7;
+  $('#count').textContent='v16 · '+t(gallery.length===1?'count1':'countN',{n:gallery.length});
+  if(!gallery.length){g.append(emptyBox('emptyG'));return}
+  const qv=(gq.hidden?'':gq.value.trim().toLowerCase());
+  const shown=sorted().filter(it=>!qv||it.title.toLowerCase().includes(qv));
+  if(!shown.length)g.append(emptyBox('nothing'));
+  shown.forEach(it=>{
+    const kind=it.v.type==='mp4'?'mp4':(it.v.type==='yt'||it.v.prov==='ytlist')?'yt':it.v.prov;
+    const c=document.createElement('div');c.className='item'+(it.fav?' fav':'');c.dataset.id=it.id;
+    const b=document.createElement('button');b.className='pick';
+    const th=document.createElement('span');th.className='th '+kind;
+    if(it.v.type==='yt'){const im=document.createElement('img');im.src='https://i.ytimg.com/vi/'+it.v.id+'/mqdefault.jpg';im.alt='';im.loading='lazy';im.decoding='async';im.referrerPolicy='no-referrer';im.onerror=()=>im.remove();th.append(im)}
+    const m=document.createElement('span');m.className='meta';
+    const ti=document.createElement('span');ti.className='ct';ti.textContent=dsp(it.title,it.v);
+    m.append(ti);b.append(th,m);
+    b.onclick=()=>{$('#err').textContent='';play(it.v,it.title,true)};
+    const bd=document.createElement('span');bd.className='badge '+kind;bd.textContent=it.v.type==='mp4'?'MP4':provName(it.v);
+    const d=document.createElement('button');d.className='del';d.textContent='✕';d.title=T_('delT');d.setAttribute('aria-label',T_('delT'));
+    d.onclick=()=>{gallery=gallery.filter(x=>x.id!==it.id);persist();render()};
+    const tl=document.createElement('div');tl.className='tools';
+    const fv=document.createElement('button');fv.className=it.fav?'on':'';fv.textContent=it.fav?'★':'☆';fv.title=T_('favT');fv.setAttribute('aria-label',T_('favT'));
+    fv.onclick=()=>{it.fav=!it.fav;persist();render();toast(t(it.fav?'favOn':'favOff'))};
+    const ed=document.createElement('button');ed.textContent='✎';ed.title=T_('renameT');ed.setAttribute('aria-label',T_('renameT'));
+    ed.onclick=async()=>{const n=await ask(T_('renT'),'',T_('renOk'),dsp(it.title,it.v));if(n!==null&&n.trim()){it.title=n.trim();it.manual=true;persist();render();if(current&&shareId(current)===it.id)$('#name').textContent=it.title}};
+    tl.append(fv,ed);
+    c.append(b,bd,d,tl);g.append(c);
+  });
+  if(current)mark(shareId(current));
+}
+function copy(){
+  const l=$('#link');
+  const fb=()=>{l.select();try{document.execCommand('copy');toast(t('copied'))}catch(e){toast(t('copyManual'))}};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(l.value).then(()=>toast(t('copied')),fb);else fb();
+}
+$('#load').onclick=load;
+$('#url').addEventListener('keydown',e=>{if(e.key==='Enter')load()});
+$('#ttl').addEventListener('keydown',e=>{if(e.key==='Enter')load()});
+$('#url').addEventListener('input',()=>{const c=$('#chk'),t=$('#url').value.trim();c.textContent='';if(!t)return;const v=parse(t);if(v&&(v.type==='yt'||v.type==='ex'))c.textContent=t(v.prov==='ytlist'?'detList':'detVideo',{p:provName(v)})});
+$('#paste').onclick=()=>{
+  if(navigator.clipboard&&navigator.clipboard.readText)navigator.clipboard.readText().then(t=>{$('#url').value=t.trim();$('#url').dispatchEvent(new Event('input'))},()=>toast(t('pasteDenied')));
+  else toast(t('pasteManual'));
+};
+$('#fs').onclick=()=>{
+  const st=$('#stage');
+  if(!current){toast(t('loadFirst'));return}
+  if(document.fullscreenElement||document.webkitFullscreenElement){(document.exitFullscreen||document.webkitExitFullscreen).call(document);return}
+  const f=st.requestFullscreen||st.webkitRequestFullscreen;
+  if(f)f.call(st);
+  else{const vd=st.querySelector('video');if(vd&&vd.webkitEnterFullscreen)vd.webkitEnterFullscreen();else toast(t('noFs'))}
+};
+$('#shareBtn').onclick=()=>{
+  if(!current){toast(t('loadFirst'));return}
+  $('#share').classList.toggle('on');copy();
+};
+$('#copy').onclick=copy;
+
+function ask(title,text,ok,inp){
+  return new Promise(res=>{
+    const m=$('#modal'),mi=$('#mi'),isIn=inp!==undefined;
+    $('#mt').textContent=title;$('#mp').textContent=text;$('#mp').style.display=text?'':'none';$('#myes').textContent=ok||t('ok');
+    mi.hidden=!isIn;if(isIn)mi.value=inp;
+    const prev=document.activeElement;
+    const done=v=>{m.hidden=true;m.onclick=null;mi.onkeydown=null;document.removeEventListener('keydown',key);$('#myes').onclick=$('#mno').onclick=null;try{prev&&prev.focus&&prev.focus()}catch(e){}res(isIn?(v?mi.value:null):v)};
+    const key=e=>{if(e.key==='Escape')done(false)};
+    document.addEventListener('keydown',key);
+    mi.onkeydown=e=>{if(e.key==='Enter')done(true)};
+    $('#myes').onclick=()=>done(true);$('#mno').onclick=()=>done(false);
+    m.onclick=e=>{if(e.target===m)done(false)};
+    m.hidden=false;(isIn?mi:$('#mno')).focus();if(isIn)mi.select();
+  });
+}
+$('#clear').onclick=async()=>{if(gallery.length&&await ask(t('clrT'),t('clrP',{n:gallery.length}),t('clear'))){gallery=[];persist();render()}};
+let unlocked=false;
+function fromHash(){
+  if(!unlocked)return;
+  const h=location.hash.slice(1);
+  if(!/^v[0-9a-f]+$/.test(h)||(current&&shareId(current)===h))return;
+  const v=fromId(h);
+  if(v){play(v,defTitle(v),false);const g=gallery.find(x=>x.id===h);if(g)$('#name').textContent=dsp(g.title,g.v);$('#share').classList.add('on')}
+}
+window.addEventListener('hashchange',fromHash);
+const ro=$('#intro');
+if(ro){
+  let seen=false;try{seen=sessionStorage.getItem('vp_seen')==='1'}catch(e){}
+  const kill=()=>{if(ro.parentNode)ro.remove()};
+  if(seen||/^#v[0-9a-f]+$/.test(location.hash)){kill()}
+  else{
+    try{sessionStorage.setItem('vp_seen','1')}catch(e){}
+    ro.addEventListener('pointerdown',kill);ro.addEventListener('touchstart',kill,{passive:true});ro.addEventListener('click',kill);
+    ro.addEventListener('animationend',e=>{if(e.animationName==='introOut2')kill()});
+    setTimeout(kill,2000);
+  }
+}
+window.addEventListener('pageshow',e=>{if(e.persisted){const r=$('#intro');if(r)r.remove()}});
+document.addEventListener('contextmenu',e=>{if(e.target.closest&&e.target.closest('.stage'))e.preventDefault()});
+document.addEventListener('dragstart',e=>{if(e.target.closest&&e.target.closest('.stage'))e.preventDefault()});
+let nextFn=null,okApi='';
+const un=s=>{const t=document.createElement('textarea');t.innerHTML=s||'';return t.value};
+function copyText(t){
+  const fb=()=>{const a=document.createElement('textarea');a.value=t;a.style.cssText='position:fixed;opacity:0';document.body.append(a);a.select();a.setSelectionRange(0,t.length);try{document.execCommand('copy');toast(t('copied'))}catch(e){toast(t('copyManual'))}a.remove()};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(()=>toast(t('copied')),fb);else fb();
+}
+function addPlay(v,title){
+  const id=shareId(v),i=gallery.findIndex(g=>g.id===id);
+  if(i>=0)gallery.unshift(gallery.splice(i,1)[0]);else gallery.unshift({id,title,v});
+  trim();persist();render();play(v,gallery[0].title,true);fetchTitle(gallery[0]);
+}
+const PIPED=['https://pipedapi.kavin.rocks','https://api.piped.private.coffee','https://pipedapi.adminforge.de','https://pipedapi.leptons.xyz','https://pipedapi.nosebs.ru','https://pipedapi.drgns.space','https://pipedapi.owo.si','https://pipedapi.reallyaweso.me','https://pipedapi.darkness.services','https://api.piped.yt','https://pipedapi.ducks.party','https://piped-api.codespace.cz'];
+function tf(u,ms){const c=new AbortController(),t=setTimeout(()=>c.abort(),ms);return fetch(u,{signal:c.signal}).finally(()=>clearTimeout(t))}
+let instP=null;
+const bases=()=>instP||(instP=tf('https://piped-instances.kavin.rocks/',5000).then(r=>r.json()).then(l=>l.filter(x=>x&&/^https:\/\//.test(x.api_url)).sort((a,b)=>(b.uptime_30d||0)-(a.uptime_30d||0)).map(x=>x.api_url).slice(0,6)).catch(()=>[]).then(d=>d.concat(PIPED).filter((x,i,a)=>a.indexOf(x)===i)));
+async function pj(path,qs){
+  const all=await bases();
+  for(const b of(okApi?[okApi].concat(all.filter(x=>x!==okApi)):all).slice(0,6)){
+    try{
+      const r=await tf(b+path+'?'+new URLSearchParams(qs),7000);
+      const d=await r.json();
+      if(r.ok&&d&&!d.error){okApi=b;return d}
+    }catch(e){}
+  }
+  throw new Error('down');
+}
+function sErr(e){$('#serr').textContent=e?t('sErr'):'';$('#yts').style.display=e?'inline-flex':'none'}
+const busy=on=>{const b=$('#sbtn');b.disabled=on;b.textContent=on?'…':t('search')};
+function card(it){
+  const c=document.createElement('div');c.className='rc';
+  const im=document.createElement('img');im.src='https://i.ytimg.com/vi/'+it.id+'/mqdefault.jpg';im.alt='';im.loading='lazy';
+  const ti=document.createElement('div');ti.className='rt';ti.textContent=it.title;
+  const s=document.createElement('div');s.className='rs';s.textContent=it.ch;
+  const a=document.createElement('div');a.className='ra';
+  const p=document.createElement('button');p.className='red';p.textContent=t('play');
+  const k=document.createElement('button');k.textContent=t('copyLink');
+  im.onclick=p.onclick=()=>addPlay({type:'yt',id:it.id,start:0},it.title);
+  k.onclick=()=>copyText('https://www.youtube.com/watch?v='+it.id);
+  a.append(p,k);c.append(im,ti,s,a);return c;
+}
+function listing(load){
+  const go=async(tok,app)=>{
+    busy(true);sErr(null);
+    try{
+      const d=await load(tok),r=$('#res');
+      if(!app)r.innerHTML='';
+      d.items.forEach(it=>r.append(card(it)));
+      if(!d.items.length&&!app){r.innerHTML='';r.append(emptyBox('noRes'))}
+      nextFn=d.next?()=>go(d.next,true):null;
+      $('#mbtn').style.display=d.next?'':'none';
+    }catch(e){sErr(e)}finally{busy(false)}
+  };
+  return go(null,false);
+}
+const vid=it=>{const m=/[?&]v=([\w-]{11})/.exec(it.url||'');return m&&{id:m[1],title:it.title,ch:it.uploaderName||''}};
+function vsearch(q){return listing(async t=>{const d=await(t?pj('/nextpage/search',{nextpage:t,q,filter:'videos'}):pj('/search',{q,filter:'videos'}));return{items:(d.items||[]).map(vid).filter(Boolean),next:d.nextpage}})}
+function chan(cid,name){listing(async t=>{const d=await(t?pj('/nextpage/channel/'+cid,{nextpage:t}):pj('/channel/'+cid,{}));return{items:(d.relatedStreams||[]).map(it=>{const v=vid(it);if(v&&!v.ch)v.ch=name;return v}).filter(Boolean),next:d.nextpage}})}
+async function doSearch(){
+  const q=$('#q').value.trim(),ch=$('#chips');if(!q)return;
+  ch.innerHTML='';$('#yts').href='https://www.youtube.com/results?search_query='+encodeURIComponent(q);
+  await vsearch(q);
+  try{
+    const c=await pj('/search',{q,filter:'channels'});
+    const L=(c.items||[]).filter(x=>/^\/channel\//.test(x.url)).slice(0,4);
+    if(!L.length)return;
+    const l=document.createElement('div');l.className='lbl';l.textContent=t('chLbl');ch.append(l);
+    L.forEach(x=>{const b=document.createElement('button');b.className='chip';const im=document.createElement('img');im.src=x.thumbnail;im.alt='';b.append(im,x.name);b.onclick=()=>chan(x.url.split('/').pop(),x.name);ch.append(b)});
+  }catch(e){}
+}
+$('#sbtn').onclick=doSearch;
+$('#q').addEventListener('keydown',e=>{if(e.key==='Enter')doSearch()});
+$('#mbtn').onclick=()=>{if(nextFn)nextFn()};
+
+function tab(n){const L=n==='L';$('#panL').hidden=!L;$('#panS').hidden=L;$('#tabL').classList.toggle('on',L);$('#tabS').classList.toggle('on',!L);$('#tabL').setAttribute('aria-selected',L);$('#tabS').setAttribute('aria-selected',!L);if(!L)setTimeout(()=>$('#q').focus(),0)}
+$('#tabL').onclick=()=>tab('L');$('#tabS').onclick=()=>tab('S');
+
+async function fetchTitle(it){
+  if(!it||it.v.type!=='yt'||it.manual||it.title!==defTitle(it.v))return;
+  try{
+    const c=new AbortController(),t=setTimeout(()=>c.abort(),6000);
+    const r=await fetch('https://www.youtube.com/oembed?format=json&url='+encodeURIComponent('https://www.youtube.com/watch?v='+it.v.id),{signal:c.signal,referrerPolicy:'no-referrer'});
+    clearTimeout(t);if(!r.ok)return;
+    const d=await r.json();
+    if(d&&d.title&&!it.manual){it.title=d.title;persist();render();if(current&&shareId(current)===it.id)$('#name').textContent=it.title}
+  }catch(e){}
+}
+function step(d){
+  const l=sorted();if(!l.length)return;
+  const i=current?l.findIndex(x=>x.id===shareId(current)):-1;
+  const n=l[((i<0?(d>0?-1:0):i)+d+l.length)%l.length];
+  $('#err').textContent='';play(n.v,n.title,true);
+}
+$('#prev').onclick=()=>step(-1);$('#next').onclick=()=>step(1);
+$('#gq').addEventListener('input',()=>render());
+function applyLang(){
+  document.documentElement.lang=lang;document.documentElement.dir=(lang==='ar'||lang==='ur')?'rtl':'ltr';
+  document.querySelectorAll('[data-i18n]').forEach(e=>{e.textContent=t(e.dataset.i18n)});
+  document.querySelectorAll('[data-i18n-ph]').forEach(e=>{e.placeholder=t(e.dataset.i18nPh)});
+  document.querySelectorAll('[data-i18n-title]').forEach(e=>{const v=t(e.dataset.i18nTitle);e.title=v;e.setAttribute('aria-label',v)});
+  if(!current)$('#name').textContent=t('noVideo');
+  $('#err').textContent='';$('#serr').textContent='';
+  $('#url').dispatchEvent(new Event('input'));
+  render();
+}
+const ls=$('#langSel');Object.keys(LANGS).forEach(k=>{const o=document.createElement('option');o.value=k;o.textContent=LANGS[k];ls.append(o)});
+function openSett(){ls.value=lang;applyTheme();$('#sm').hidden=false;$('#smx').focus()}
+function closeSett(){$('#sm').hidden=true}
+$('#setb').onclick=openSett;$('#smx').onclick=closeSett;
+$('#sm').addEventListener('click',e=>{if(e.target===$('#sm'))closeSett()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#sm').hidden)closeSett()});
+document.querySelectorAll('#themeSeg button').forEach(b=>b.onclick=()=>{theme=b.dataset.th;try{localStorage.setItem('vp_theme',theme)}catch(e){}applyTheme()});
+ls.onchange=()=>{lang=ls.value;try{localStorage.setItem('vp_lang',lang)}catch(e){}applyLang()};
+unlocked=true;applyTheme();applyLang();fromHash();gallery.filter(g=>g.v.type==='yt'&&g.title===defTitle(g.v)).slice(0,6).forEach(fetchTitle);
+</script>
+</body>
+</html>
